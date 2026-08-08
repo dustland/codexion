@@ -1,6 +1,6 @@
 # Codexion
 
-Codexion is a lightweight local companion for Codex Desktop.
+Codexion is a lightweight local companion for Codex Desktop, developed under LYU.ai.
 
 The first feature is **Sanity Meter**: a small title-area indicator showing the
 current Codex weekly usage percentage.
