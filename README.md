@@ -35,7 +35,7 @@ Codexion 会在 Codex Desktop 页面上下文里请求已有的 `/wham/usage` �
 GitHub 配置并安装：
 
 ```sh
-codex plugin marketplace add niuio/codexion --ref main
+codex plugin marketplace add lyuai/codexion --ref main
 codex plugin add codexion@codexion
 codex plugin list
 ```
@@ -43,7 +43,7 @@ codex plugin list
 如果你正在使用本地 checkout：
 
 ```sh
-codex plugin marketplace add ~/dustland/codexion
+codex plugin marketplace add ~/lyu/codexion
 codex plugin add codexion@codexion
 ```
 

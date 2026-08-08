@@ -1,21 +1,29 @@
 {
   "name": "codexion",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260808150635",
   "description": "A lightweight Codex Desktop companion that starts a local CDP instance for UI extensions.",
   "author": {
-    "name": "niuio"
+    "name": "LYU.ai"
   },
-  "repository": "https://github.com/niuio/codexion",
+  "repository": "https://github.com/lyuai/codexion",
   "license": "MIT",
-  "keywords": ["codex", "desktop", "cdp", "usage", "sanity-meter"],
+  "keywords": [
+    "codex",
+    "desktop",
+    "cdp",
+    "usage",
+    "sanity-meter"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Codexion",
     "shortDescription": "A local CDP companion for Codex Desktop.",
     "longDescription": "Starts a localhost CDP-enabled Codex Desktop instance so Codexion's standalone helper can add lightweight UI extensions.",
-    "developerName": "niuio",
+    "developerName": "LYU.ai",
     "category": "Productivity",
-    "capabilities": ["Read"],
+    "capabilities": [
+      "Read"
+    ],
     "defaultPrompt": "Start Codexion and show my weekly usage."
   }
 }
