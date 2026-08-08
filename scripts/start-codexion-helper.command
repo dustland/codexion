@@ -22,6 +22,10 @@ if [[ ! -f "$root/dist/index.js" ]]; then
     echo "Codexion helper needs pnpm to build $root" >&2
     exit 1
   fi
+  if [[ ! -d "$root/node_modules" ]]; then
+    echo "Codexion helper is installing its local build dependencies"
+    pnpm --dir "$root" install --frozen-lockfile --ignore-scripts
+  fi
   pnpm --dir "$root" build
 fi
 
