@@ -7,14 +7,15 @@ description: Start and use Codexion's local Codex Desktop CDP companion when the
 
 Codexion is a lightweight local companion for Codex Desktop. Its plugin
 `SessionStart` hook checks `127.0.0.1:9341` and launches a CDP-enabled desktop
-instance when needed. The hook does not modify the already-running renderer;
-the launched instance is the one that exposes CDP.
+instance and the standalone Codexion helper when needed. The hook does not
+modify the already-running renderer; the launched instance is the one that
+exposes CDP.
 
 When the user asks to use the Sanity Meter or another Codexion UI extension:
 
 1. Check that the local CDP instance is reachable.
-2. If the project dependencies are installed, run `pnpm attach` from the
-   Codexion repository to start the standalone UI helper.
+2. Let the plugin hook start the standalone UI helper; if it is not running,
+   inspect `PLUGIN_DATA/codexion-helper.log` before starting another copy.
 3. Keep the helper local and do not read, persist, or forward credentials.
 4. Do not modify `app.asar` or signed application resources.
 
