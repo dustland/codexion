@@ -5,6 +5,30 @@ Codexion is a lightweight local companion for Codex Desktop.
 The first feature is **Sanity Meter**: a small title-area indicator showing the
 current Codex weekly usage percentage.
 
+## Run
+
+要求 Node.js 22+。
+
+1. 完全退出 ChatGPT/Codex Desktop。
+2. 运行 `./scripts/launch-debug.command`，以本机 CDP 端口启动应用。
+3. 在另一个终端运行：
+
+   ```sh
+   pnpm install
+   pnpm attach
+   ```
+
+也可以手动指定端口：
+
+```sh
+CODEXION_CDP_PORT=9342 ./scripts/launch-debug.command
+pnpm attach --port 9342
+```
+
+Codexion 会在 Codex Desktop 页面上下文里请求已有的 `/wham/usage` 接口，
+复用应用当前登录态，只读取 rate-limit 使用数据。拿不到真实数据时显示
+`WEEKLY —`，不会用本地任务数量进行估算。
+
 ## Principles
 
 - Use the local Chrome DevTools Protocol (CDP) connection exposed by Codex Desktop.
@@ -33,7 +57,3 @@ pnpm check
 pnpm test
 pnpm build
 ```
-
-The CDP attach flow and the live Codex usage adapter are intentionally left as
-the next implementation step. The current scaffold establishes their interfaces
-without pretending that a local task count is the real Codex weekly usage.

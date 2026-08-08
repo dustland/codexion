@@ -10,8 +10,9 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "format": "biome format --write .",
-    "lint": "biome check ."
+    "attach": "pnpm build && node dist/index.js attach",
+    "format": "biome format --write src test package.json tsconfig.json biome.json",
+    "lint": "biome check src test package.json tsconfig.json biome.json"
   },
   "engines": {
     "node": ">=22"
