@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "description": "A lightweight Codex Desktop companion that starts a local CDP instance for UI extensions.",
   "author": {
-    "name": "dustland"
+    "name": "niuio"
   },
-  "repository": "https://github.com/dustland/codexion",
+  "repository": "https://github.com/niuio/codexion",
   "license": "MIT",
   "keywords": ["codex", "desktop", "cdp", "usage", "sanity-meter"],
   "skills": "./skills/",
@@ -13,7 +13,7 @@
     "displayName": "Codexion",
     "shortDescription": "A local CDP companion for Codex Desktop.",
     "longDescription": "Starts a localhost CDP-enabled Codex Desktop instance so Codexion's standalone helper can add lightweight UI extensions.",
-    "developerName": "dustland",
+    "developerName": "niuio",
     "category": "Productivity",
     "capabilities": ["Read"],
     "defaultPrompt": "Start Codexion and show my weekly usage."
