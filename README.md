@@ -1,6 +1,6 @@
 # Codexion
 
-Codexion is a lightweight local companion for Codex Desktop, developed as part of Code Spark Network.
+Codexion is a lightweight local companion for Codex Desktop, developed under CSN.ai.
 
 The first feature is **Sanity Meter**: a small title-area indicator showing the
 current Codex weekly usage percentage.
