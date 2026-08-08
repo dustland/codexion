@@ -1,0 +1,25 @@
+{
+  "name": "codexion",
+  "version": "0.1.0",
+  "description": "A lightweight local companion for Codex Desktop.",
+  "type": "module",
+  "bin": {
+    "codexion": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "format": "biome format --write .",
+    "lint": "biome check ."
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.4"
+  }
+}
