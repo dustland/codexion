@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/zsh \"${PLUGIN_ROOT}/scripts/plugin-session-start.command\"",
+            "statusMessage": "Starting Codexion CDP"
+          }
+        ]
+      }
+    ]
+  }
+}
