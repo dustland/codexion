@@ -1,6 +1,6 @@
 # Codexion
 
-Codexion is a lightweight local companion for Codex Desktop, developed under CSN.ai.
+Codexion is a lightweight local companion for Codex Desktop, developed under LYU.ai.
 
 The first feature is **Sanity Meter**: a small title-area indicator showing the
 current Codex weekly usage percentage.
@@ -35,7 +35,7 @@ Codexion 会在 Codex Desktop 页面上下文里请求已有的 `/wham/usage` �
 GitHub 配置并安装：
 
 ```sh
-codex plugin marketplace add csn-ai/codexion --ref main
+codex plugin marketplace add lyuai/codexion --ref main
 codex plugin add codexion@codexion
 codex plugin list
 ```
@@ -43,7 +43,7 @@ codex plugin list
 如果你正在使用本地 checkout：
 
 ```sh
-codex plugin marketplace add ~/csn-ai/codexion
+codex plugin marketplace add ~/lyuai/codexion
 codex plugin add codexion@codexion
 ```
 
