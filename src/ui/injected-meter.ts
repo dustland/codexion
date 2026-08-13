@@ -4,68 +4,86 @@ const METER_ID = "codexion-sanity-meter-host";
 
 export const INSTALL_METER_EXPRESSION = `(() => {
   const meterId = ${JSON.stringify(METER_ID)};
-  if (document.getElementById(meterId)) {
-    return true;
-  }
+  window.__codexionMeterObserver?.disconnect();
+  document.getElementById(meterId)?.remove();
 
   const host = document.createElement("div");
   host.id = meterId;
-  host.style.position = "fixed";
-  host.style.top = "8px";
-  host.style.left = "50%";
-  host.style.transform = "translateX(-50%)";
-  host.style.zIndex = "2147483647";
+  host.style.display = "none";
+  host.style.flex = "0 0 auto";
   host.style.pointerEvents = "none";
 
   const shadow = host.attachShadow({ mode: "open" });
   const style = document.createElement("style");
   style.textContent = \`
-    :host { color-scheme: dark; }
+    :host {
+      color: inherit;
+      display: inline-flex;
+      height: 28px;
+    }
     .meter {
       align-items: center;
-      background: color-mix(in srgb, #171717 92%, transparent);
-      border: 1px solid color-mix(in srgb, #f0b24b 55%, transparent);
-      border-radius: 999px;
-      box-shadow: 0 4px 18px rgb(0 0 0 / 24%);
-      color: #f8e7c3;
       display: inline-flex;
-      font: 600 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      gap: 6px;
-      letter-spacing: .02em;
-      padding: 4px 9px;
+      font: 500 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      height: 28px;
+      opacity: .58;
+      padding: 0 5px;
       white-space: nowrap;
     }
-    .dot {
-      background: #f0b24b;
-      border-radius: 50%;
-      box-shadow: 0 0 7px rgb(240 178 75 / 70%);
-      height: 6px;
-      width: 6px;
+    .meter[data-level="medium"] { opacity: .78; }
+    .meter[data-level="high"] {
+      color: var(--color-token-destructive-foreground, #d45b5b);
+      opacity: 1;
     }
-    .meter[data-level="high"] { border-color: #e97070; color: #ffd1d1; }
-    .meter[data-level="high"] .dot { background: #e97070; box-shadow: 0 0 7px rgb(233 112 112 / 70%); }
-    .meter[data-level="medium"] { border-color: #e5a64f; }
-    .meter[data-level="low"] { border-color: #76c58a; color: #d7f2dd; }
-    .meter[data-level="low"] .dot { background: #76c58a; box-shadow: 0 0 7px rgb(118 197 138 / 70%); }
+    @media (max-width: 900px) {
+      :host { display: none !important; }
+    }
   \`;
 
   const meter = document.createElement("div");
   meter.className = "meter";
   meter.dataset.level = "unknown";
-  meter.innerHTML = '<span class="dot"></span><span class="label">WEEKLY —</span>';
+  meter.innerHTML = '<span class="label">Weekly —</span>';
   shadow.append(style, meter);
   document.documentElement.append(host);
+
+  const findActionGroup = () => {
+    const anchor = document.querySelector('button[aria-label="Toggle pinned summary"]');
+    let candidate = anchor?.parentElement ?? null;
+    while (candidate && candidate !== document.body) {
+      if (candidate.classList.contains("ms-auto") && candidate.classList.contains("items-center")) {
+        return candidate;
+      }
+      candidate = candidate.parentElement;
+    }
+    return null;
+  };
+
+  const place = () => {
+    const group = findActionGroup();
+    if (!group) {
+      host.style.display = "none";
+      return;
+    }
+    if (host.parentElement !== group) group.prepend(host);
+    host.style.display = "inline-flex";
+  };
+
+  place();
+  const observer = new MutationObserver(place);
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.__codexionMeterObserver = observer;
 
   window.__codexionUpdateSanityMeter = (snapshot) => {
     const label = meter.querySelector(".label");
     if (!label) return;
     if (!snapshot || typeof snapshot.usedPercent !== "number" || !Number.isFinite(snapshot.usedPercent)) {
-      label.textContent = "WEEKLY —";
+      label.textContent = "Weekly —";
       meter.dataset.level = "unknown";
       return;
     }
     const used = Math.max(0, Math.min(100, Math.round(snapshot.usedPercent)));
-    label.textContent = \`WEEKLY \${used}% USED\`;
+    label.textContent = \`Weekly \${used}%\`;
     meter.dataset.level = used >= 85 ? "high" : used >= 60 ? "medium" : "low";
     const reset = snapshot.resetAt ? new Date(snapshot.resetAt) : null;
     meter.title = reset && !Number.isNaN(reset.getTime()) ? \`Resets \${reset.toLocaleString()}\` : "";

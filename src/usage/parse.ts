@@ -19,6 +19,10 @@ export function parseWeeklyUsage(payload: unknown): UsageSnapshot | null {
         (window.windowSeconds === null || window.windowSeconds >= WEEK_IN_SECONDS),
     )
     .sort((left, right) => {
+      const pathPriority =
+        Number(right.path.endsWith("rateLimits.primary")) -
+        Number(left.path.endsWith("rateLimits.primary"));
+      if (pathPriority !== 0) return pathPriority;
       if (left.windowSeconds === null) {
         return right.windowSeconds === null ? 0 : -1;
       }
@@ -70,9 +74,11 @@ function visit(value: unknown, path: string, windows: UsageWindow[]): void {
 }
 
 function readUsageWindow(record: Record<string, unknown>, path: string): UsageWindow | null {
-  const usedPercent = asPercent(record.used_percent);
-  const remainingPercent = asPercent(record.remaining_percent);
-  const windowSeconds = asNumber(record.limit_window_seconds);
+  const usedPercent = asPercent(record.usedPercent ?? record.used_percent);
+  const remainingPercent = asPercent(record.remainingPercent ?? record.remaining_percent);
+  const explicitSeconds = asNumber(record.limit_window_seconds);
+  const windowMinutes = asNumber(record.windowDurationMins);
+  const windowSeconds = explicitSeconds ?? (windowMinutes === null ? null : windowMinutes * 60);
 
   if (usedPercent === null && remainingPercent === null) {
     return null;
@@ -88,13 +94,20 @@ function readUsageWindow(record: Record<string, unknown>, path: string): UsageWi
     path,
     usedPercent: clampPercent(normalizedUsed),
     remainingPercent: clampPercent(normalizedRemaining),
-    resetAt: parseDate(record.reset_at),
+    resetAt: parseDate(record.resetsAt ?? record.reset_at),
     windowSeconds,
   };
 }
 
 function isRateLimitWindow(path: string): boolean {
-  return path.endsWith("rate_limit.primary_window") || path.endsWith("rate_limit.secondary_window");
+  return (
+    path.endsWith("rate_limit.primary_window") ||
+    path.endsWith("rate_limit.secondary_window") ||
+    path.endsWith("rateLimits.primary") ||
+    path.endsWith("rateLimits.secondary") ||
+    path.endsWith(".primary") ||
+    path.endsWith(".secondary")
+  );
 }
 
 function asNumber(value: unknown): number | null {

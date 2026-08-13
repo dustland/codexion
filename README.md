@@ -1,90 +1,215 @@
 # Codexion
 
-Codexion is a lightweight local companion for Codex Desktop, developed under LYU.ai.
+**English** | [简体中文](README.zh-CN.md)
 
-The first feature is **Sanity Meter**: a small title-area indicator showing the
-current Codex weekly usage percentage.
+[![CI](https://github.com/lyuai/codexion/actions/workflows/ci.yml/badge.svg)](https://github.com/lyuai/codexion/actions/workflows/ci.yml)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple)](https://github.com/lyuai/codexion)
 
-## Run
+Codexion is a lightweight local companion for Codex Desktop. It safely launches or adopts the
+desktop app and uses the loopback Chrome DevTools Protocol (CDP) to provide small, restrained UI
+enhancements without modifying the installed application.
 
-要求 Node.js 22+。
+The first extension is **Sanity Meter**, a native-looking weekly usage indicator in the right side
+of the Codex title bar, such as `Weekly 8%`.
 
-1. 完全退出 ChatGPT/Codex Desktop。
-2. 运行 `./scripts/launch-debug.command`，以本机 CDP 端口启动应用。
-3. 在另一个终端运行：
+> Codexion is not a Codex plugin. CDP must be enabled when the desktop process starts, while plugin
+> session hooks run after that process already exists. A standalone companion can coordinate and
+> verify the complete lifecycle instead of attempting to launch a competing second instance.
 
-   ```sh
-   pnpm install
-   pnpm attach
-   ```
+## Status
 
-也可以手动指定端口：
+- Platform: macOS
+- Runtime: Node.js 22 or later
+- Default app: `/Applications/ChatGPT.app`
+- Default CDP endpoint: `127.0.0.1:9341`
+- Usage source: the read-only Codex app-server method `account/rateLimits/read`
+- Refresh interval: 60 seconds
 
-```sh
-CODEXION_CDP_PORT=9342 ./scripts/launch-debug.command
-pnpm attach --port 9342
-```
+Codexion does not modify `app.asar`, application binaries, or signed resources. It does not create
+a separate browser profile or require another login.
 
-Codexion 会在 Codex Desktop 页面上下文里请求已有的 `/wham/usage` 接口，
-复用应用当前登录态，只读取 rate-limit 使用数据。拿不到真实数据时显示
-`WEEKLY —`，不会用本地任务数量进行估算。
-
-## Codex plugin mode
-
-仓库现在同时包含 plugin manifest 和 marketplace manifest。首次使用可以直接从
-GitHub 配置并安装：
+## Quick start
 
 ```sh
-codex plugin marketplace add lyuai/codexion --ref main
-codex plugin add codexion@codexion
-codex plugin list
+git clone https://github.com/lyuai/codexion.git
+cd codexion
+pnpm install
+pnpm start
 ```
 
-如果你正在使用本地 checkout：
+After installing dependencies, you can also double-click:
+
+```text
+scripts/start.command
+```
+
+If the current Codex process does not expose CDP, Codexion asks it to quit normally and opens it
+again with loopback debugging enabled. Save active work before the first run. Codexion does not
+force-terminate the app.
+
+Use a different port or app location when needed:
 
 ```sh
-codex plugin marketplace add ~/lyu/codexion
-codex plugin add codexion@codexion
+CODEXION_CDP_PORT=9342 scripts/start.command
+
+pnpm start -- \
+  --app /Applications/ChatGPT.app \
+  --port 9342
 ```
 
-安装后新建一个 Codex session，并在插件安全提示中信任 Codexion hook。之后每次
-session 启动时会检查本机 CDP；如果 `9341` 不可用，会启动一个新的
-CDP-enabled ChatGPT/Codex Desktop 实例，然后自动启动独立的 Codexion helper。
-插件无法给已经启动的 renderer 事后补开 CDP，因此 hook 启动的是新实例。
+`CODEXION_APP_PATH` can also set the default application path.
 
-helper 的日志和 PID 文件放在 `PLUGIN_DATA`；如果插件是在源码仓库里运行，
-它会直接使用现有构建产物；远程安装且缺少依赖时，会先执行一次
-`pnpm install --frozen-lockfile` 和 `pnpm build`。
+## How it works
 
-插件 hook 文件位于 `hooks/hooks.json`，不需要把 hook 路径重复写进
-`.codex-plugin/plugin.json`。首次启用时请在 Codex 的插件安全提示中审阅并信任
-该 hook；这是插件执行本机启动命令所必需的授权。
+`codexion start` performs a complete, verified lifecycle:
 
-## Principles
+1. Locate the Codex Desktop main process.
+2. Inspect the CDP endpoint and verify its process owner.
+3. Reuse the process when it already owns the requested port.
+4. Otherwise request a normal application quit through macOS.
+5. Launch the trusted Codex executable with CDP bound only to `127.0.0.1`.
+6. Wait for the endpoint and verify that the newly launched PID owns it.
+7. Select the main renderer instead of auxiliary views such as the avatar overlay.
+8. Read a normalized weekly snapshot from the Codex app-server.
+9. Update the title-bar Widget every minute.
 
-- Use the local Chrome DevTools Protocol (CDP) connection exposed by Codex Desktop.
-- Use Node.js built-ins (`fetch` and `WebSocket`) before adding runtime dependencies.
-- Inject only the UI and behavior needed by Codexion; do not modify `app.asar` or signed application resources.
-- Keep usage data local. Do not persist or forward session credentials.
-- Treat usage data as an adapter boundary so changes in Codex's UI or data shape do not leak through the rest of the app.
+Usage retrieval and UI injection are intentionally separate: app-server provides data, while CDP
+only renders the extension. This avoids coupling data access to unstable renderer HTTP routes.
 
-Codexion is intentionally a companion script, not a replacement desktop app: no
-Electron shell, React renderer, browser bundle, or embedded Chromium runtime.
+## CLI
+
+```text
+codexion start   Prepare or reuse Codex with CDP, then run Sanity Meter
+codexion attach  Attach to an existing CDP-enabled Codex process
+codexion doctor  Print app, process, and CDP diagnostics
+```
+
+Repository commands:
+
+```sh
+pnpm start
+pnpm attach
+pnpm doctor
+```
+
+## Logs and diagnostics
+
+The double-click launcher stores runtime state at:
+
+```text
+~/Library/Application Support/Codexion/codexion.log
+~/Library/Application Support/Codexion/codexion.pid
+```
+
+Inspect the current environment with:
+
+```sh
+pnpm doctor
+curl http://127.0.0.1:9341/json/version
+```
+
+| Symptom | Cause and recovery |
+| --- | --- |
+| The Widget is missing | Run `pnpm doctor`; confirm CDP is ready and the main renderer is present |
+| The Widget shows `Weekly —` | Usage is unavailable or unrecognized; Codexion never estimates it from local task counts |
+| The port is occupied | Select another `CODEXION_CDP_PORT` or stop the unrelated local process |
+| Multiple main processes are detected | Quit all Codex Desktop instances normally, then start again |
+| Codex does not quit normally | Codexion stops; it does not force-terminate or launch a second instance |
 
 ## Project layout
 
 ```text
 src/
-├── cdp/       CDP connection and protocol code
-├── usage/     Usage data types and provider adapters
-└── ui/        Title meter formatting and injected UI
+├── lifecycle/  Process identity, normal quit, launch, and port ownership
+├── cdp/        Loopback target discovery and CDP session
+├── usage/      App-server provider, response adapters, and UsageSnapshot
+└── ui/         Widget installation, placement, styling, and rendering
+
+scripts/
+├── start.command   Double-click launcher
+└── doctor.command  Double-click diagnostics
 ```
+
+See [Architecture](docs/ARCHITECTURE.md) for module boundaries and the security model.
+
+## Future customization
+
+Backgrounds, themes, status indicators, and other enhancements should be independent extensions,
+not additions to the lifecycle or Sanity Meter modules.
+
+For a background extension, the recommended design is:
+
+1. Create `src/extensions/background/` with configuration, CSS generation, and lifecycle logic.
+2. Accept only local files explicitly selected by the user and validate type, size, and real path.
+3. Inject a uniquely identified `<style>` or controlled DOM node through CDP.
+4. Use narrow selectors and CSS variables; never replace native React components.
+5. Provide idempotent `apply`, `disable`, and `reset` operations.
+6. Store settings in Codexion's own application data directory, never inside the Codex bundle.
+7. Fail closed when a renderer update invalidates the expected anchor or shell.
+
+See [Extension development](docs/EXTENSIONS.md) for a proposed extension interface, a detailed
+background example, resource handling, locator rules, and a security checklist.
+
+## Roadmap
+
+- [x] Verified one-click macOS CDP lifecycle
+- [x] Codex app-server weekly usage provider
+- [x] Native-style Sanity Meter in the title bar
+- [x] `doctor` diagnostics
+- [ ] Installable macOS companion application
+- [ ] Extension registry and unified enable/disable behavior
+- [ ] Local background and theme extension
+- [ ] Settings UI and one-click native reset
+- [ ] Renderer and app-server compatibility matrix
+
+The roadmap describes direction, not promised release dates. Discuss substantial designs in an
+issue before implementation.
 
 ## Development
 
-```bash
+```sh
 pnpm install
+pnpm format
+pnpm lint
 pnpm check
 pnpm test
 pnpm build
 ```
+
+Before submitting a change, run at least:
+
+```sh
+pnpm lint
+pnpm check
+pnpm test
+pnpm build
+```
+
+## Principles
+
+- **Local first:** data, CDP, and control remain on the local machine.
+- **Verify ownership:** a reachable port is insufficient; it must belong to the target process.
+- **Normal lifecycle:** prefer a normal quit and reject force-kills or uncontrolled second instances.
+- **Adapter boundaries:** isolate Codex protocol and DOM changes in providers and extensions.
+- **Honest status:** show unavailable state when real data is absent; never invent a plausible value.
+- **Reversible UI:** every enhancement must be independently removable and restore native behavior.
+- **Minimal surface:** do not embed a browser, clone Codex, or modify signed resources.
+
+## Contributing
+
+Issues, compatibility reports, documentation, and code improvements are welcome. Please read:
+
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+
+Open a feature request before implementing backgrounds, themes, persistent controllers, or
+cross-platform support so the safety and recovery boundaries can be agreed first.
+
+## License
+
+Codexion is available under the [MIT License](LICENSE). Codex, ChatGPT, OpenAI, and related names
+and marks belong to their respective owners. Codexion is an independent community project and is
+not affiliated with or endorsed by OpenAI.

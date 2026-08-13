@@ -2,6 +2,23 @@
   "name": "codexion",
   "version": "0.1.0",
   "description": "A lightweight local companion for Codex Desktop.",
+  "license": "MIT",
+  "author": "LYU.ai",
+  "homepage": "https://github.com/lyuai/codexion#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyuai/codexion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lyuai/codexion/issues"
+  },
+  "keywords": [
+    "codex",
+    "desktop",
+    "cdp",
+    "macos",
+    "usage"
+  ],
   "type": "module",
   "bin": {
     "codexion": "dist/index.js"
@@ -10,7 +27,9 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "start": "pnpm build && node dist/index.js start",
     "attach": "pnpm build && node dist/index.js attach",
+    "doctor": "pnpm build && node dist/index.js doctor",
     "format": "biome format --write src test package.json tsconfig.json biome.json",
     "lint": "biome check src test package.json tsconfig.json biome.json"
   },

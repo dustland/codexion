@@ -37,6 +37,23 @@ describe("parseWeeklyUsage", () => {
     expect(snapshot?.remainingPercent).toBe(64);
   });
 
+  it("parses the current app-server rate limit response", () => {
+    const snapshot = parseWeeklyUsage({
+      rateLimits: {
+        limitId: "codex",
+        primary: {
+          usedPercent: 8,
+          windowDurationMins: 10_080,
+          resetsAt: 1_787_201_360,
+        },
+      },
+    });
+
+    expect(snapshot?.usedPercent).toBe(8);
+    expect(snapshot?.remainingPercent).toBe(92);
+    expect(snapshot?.resetAt?.getTime()).toBe(1_787_201_360_000);
+  });
+
   it("does not turn an hourly-only payload into a weekly reading", () => {
     expect(
       parseWeeklyUsage({

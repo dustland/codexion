@@ -1,19 +1,19 @@
 import { waitForMainRenderer } from "./cdp/discovery.js";
 import { CdpSession } from "./cdp/session.js";
 import { createMeterUpdateExpression, INSTALL_METER_EXPRESSION } from "./ui/injected-meter.js";
-import { parseWeeklyUsage } from "./usage/parse.js";
-import type { UsageSnapshot } from "./usage/types.js";
+import {
+  type AppServerUsageProvider,
+  createAppServerUsageProvider,
+} from "./usage/app-server-provider.js";
+import type { UsageProvider, UsageSnapshot } from "./usage/types.js";
 
 const USAGE_POLL_INTERVAL_MS = 60_000;
 
 interface AttachOptions {
+  appPath?: string;
   log?: (message: string) => void;
   timeoutMs?: number;
-}
-
-interface FetchUsageResult {
-  ok: boolean;
-  body?: unknown;
+  usageProvider?: UsageProvider;
 }
 
 export interface AttachedCodexion {
@@ -27,6 +27,17 @@ export async function attachToCodex(
   options: AttachOptions = {},
 ): Promise<AttachedCodexion> {
   const log = options.log ?? (() => undefined);
+  let ownedProvider: AppServerUsageProvider | null = null;
+  let usageProvider: UsageProvider;
+  if (options.usageProvider === undefined) {
+    ownedProvider =
+      options.appPath === undefined
+        ? await createAppServerUsageProvider()
+        : await createAppServerUsageProvider(options.appPath);
+    usageProvider = ownedProvider;
+  } else {
+    usageProvider = options.usageProvider;
+  }
   const target = await waitForMainRenderer(port, options.timeoutMs);
   const webSocketUrl = target.webSocketDebuggerUrl;
   if (webSocketUrl === undefined) {
@@ -44,21 +55,7 @@ export async function attachToCodex(
       return latestSnapshot;
     }
 
-    const result = await session.evaluate<FetchUsageResult>(`
-      (async () => {
-        try {
-          const response = await fetch("/wham/usage", {
-            cache: "no-store",
-            credentials: "include",
-          });
-          return { ok: response.ok, body: response.ok ? await response.json() : null };
-        } catch {
-          return { ok: false, body: null };
-        }
-      })()
-    `);
-
-    latestSnapshot = result.ok ? parseWeeklyUsage(result.body) : null;
+    latestSnapshot = await usageProvider.getSnapshot();
     await session.evaluate(createMeterUpdateExpression(latestSnapshot));
     return latestSnapshot;
   };
@@ -81,6 +78,7 @@ export async function attachToCodex(
       closed = true;
       clearInterval(timer);
       session.close();
+      ownedProvider?.close();
     },
     refresh,
     targetUrl: target.url,

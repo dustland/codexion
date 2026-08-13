@@ -67,7 +67,9 @@ export async function waitForMainRenderer(
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const target = (await fetchTargets(port)).find(isMainRendererTarget);
+      const targets = (await fetchTargets(port)).filter(isMainRendererTarget);
+      const target =
+        targets.find((candidate) => candidate.url === "app://-/index.html") ?? targets[0];
       if (target !== undefined) {
         return target;
       }
