@@ -340,7 +340,8 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     const labels=["Toggle pinned summary","Toggle bottom panel","Toggle side panel"];
     const candidates=labels.flatMap(label=>Array.from(document.querySelectorAll('button[aria-label="'+label+'"]')));
     const anchor=candidates.find(button=>{const rect=button.getBoundingClientRect();return rect.width>0&&rect.height>0&&rect.x>window.innerWidth/2;})||candidates[0];
-    const group=anchor?.parentElement;
+    const anchorWrapper=anchor?.parentElement;
+    const group=anchorWrapper?.classList?.contains("contents")?anchorWrapper.parentElement:anchorWrapper;
     if(group){const meterHost=document.getElementById("codexion-sanity-meter-host");const reference=meterHost?.parentElement===group?meterHost.nextSibling:group.firstChild;if(host!==reference)group.insertBefore(host,reference);}
     const integrationTitle=Array.from(document.querySelectorAll("nav *")).find(e=>e.children.length===0&&e.textContent.trim()==="Integrations");
     const integrationList=integrationTitle?.parentElement?.nextElementSibling;

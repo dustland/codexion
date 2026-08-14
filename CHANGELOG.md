@@ -12,6 +12,8 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 - Place only the quota meter before every native control group in the complete right-side title-bar
   action rail, while keeping the GitHub Issue Inbox in its original control group.
+- Isolate the GitHub Issue trigger from the native pinned-summary tooltip wrapper so hovering it
+  cannot open a misplaced native tooltip.
 
 ## 0.2.3 - 2026-08-14
 
