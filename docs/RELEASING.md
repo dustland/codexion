@@ -23,7 +23,9 @@ the job. They must never be committed to the repository.
 3. Commit and push the release changes.
 4. Create and push the tag: `git tag v0.2.0 && git push origin v0.2.0`.
 5. The Release workflow builds, signs, notarizes, staples, verifies, and publishes the DMG, app ZIP,
-   SHA-256 checksum, and signed `appcast.xml`.
+   SHA-256 checksum, and signed `appcast.xml`. The matching version section in `CHANGELOG.md`
+   becomes the GitHub Release Notes; publishing fails instead of falling back to a commit dump when
+   that section is missing or empty.
 
 ## Automatic updates
 

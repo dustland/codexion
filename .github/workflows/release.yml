@@ -129,13 +129,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          node scripts/extract-release-notes.mjs "$VERSION" > build/macos/release-notes.md
           gh release create "$GITHUB_REF_NAME" \
             "build/macos/Codexion-v$VERSION-arm64.dmg" \
             "build/macos/Codexion-v$VERSION-arm64.dmg.sha256" \
             "build/macos/Codexion-v$VERSION-arm64.zip" \
             "build/macos/appcast.xml" \
             --verify-tag \
-            --generate-notes \
+            --notes-file build/macos/release-notes.md \
             --title "Codexion $GITHUB_REF_NAME"
 
       - name: Remove temporary keychain
