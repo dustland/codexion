@@ -7,6 +7,7 @@ describe("injected sanity meter", () => {
     expect(INSTALL_METER_EXPRESSION).toContain('"Toggle bottom panel"');
     expect(INSTALL_METER_EXPRESSION).toContain("rect.x > window.innerWidth / 2");
     expect(INSTALL_METER_EXPRESSION).toContain("host.nextSibling === issueHost");
+    expect(INSTALL_METER_EXPRESSION).toContain('classList?.contains("ms-auto")');
     expect(INSTALL_METER_EXPRESSION).toContain('viewBox", "0 0 16 16"');
     expect(INSTALL_METER_EXPRESSION).toContain("Weekly usage unavailable");
     expect(INSTALL_METER_EXPRESSION).not.toContain('button[aria-label="Open profile menu"]');

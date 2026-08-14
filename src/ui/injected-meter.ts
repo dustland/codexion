@@ -66,10 +66,17 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       const rect = button.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0 && rect.x > window.innerWidth / 2;
     }) || candidates[0];
-    const group = anchor?.parentElement;
-    if (!group) {
+    const localGroup = anchor?.parentElement;
+    if (!localGroup) {
       host.remove();
       return;
+    }
+    let group = localGroup;
+    for (let element = localGroup; element && element.parentElement; element = element.parentElement) {
+      if (element.classList?.contains("ms-auto")) {
+        group = element;
+        break;
+      }
     }
     const issueHost = document.getElementById("codexion-issue-inbox-host");
     const reference = issueHost?.parentElement === group ? issueHost : group.firstChild;
