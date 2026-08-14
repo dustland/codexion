@@ -8,6 +8,11 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## 0.2.4 - 2026-08-14
 
+### Added
+
+- Add a compact tooltip to the GitHub Issue trigger and a richer quota tooltip with the active
+  account, email, remaining weekly allowance, plan, reset time, and a link to Tibo on X.
+
 ### Fixed
 
 - Place only the quota meter before every native control group in the complete right-side title-bar

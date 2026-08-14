@@ -4,14 +4,16 @@ const METER_ID = "codexion-sanity-meter-host";
 
 export const INSTALL_METER_EXPRESSION = `(() => {
   const meterId = ${JSON.stringify(METER_ID)};
+  const tooltipId = meterId + "-tooltip";
   window.__codexionMeterCleanup?.();
   document.getElementById(meterId)?.remove();
+  document.getElementById(tooltipId)?.remove();
 
   const host = document.createElement("span");
   host.id = meterId;
   host.setAttribute("role", "status");
   host.setAttribute("aria-label", "Weekly usage unavailable");
-  host.style.pointerEvents = "none";
+  host.style.pointerEvents = "auto";
 
   const shadow = host.attachShadow({ mode: "open" });
   const style = document.createElement("style");
@@ -59,6 +61,56 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   meter.append(icon, label);
   shadow.append(style, meter);
 
+  const tooltipHost = document.createElement("span");
+  tooltipHost.id = tooltipId;
+  tooltipHost.style.inset = "0";
+  tooltipHost.style.pointerEvents = "none";
+  tooltipHost.style.position = "fixed";
+  tooltipHost.style.zIndex = "2147483647";
+  const tooltipShadow = tooltipHost.attachShadow({ mode: "open" });
+  tooltipShadow.innerHTML = \`<style>
+    .tooltip { background:var(--color-background-panel,var(--color-token-bg-primary,#fff)); border:1px solid color-mix(in oklab,currentColor 12%,transparent); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.08); color:var(--color-token-text-primary,#202020); display:none; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; padding:11px 12px; pointer-events:auto; position:fixed; width:240px; }
+    .tooltip[data-open="true"] { display:block; }
+    .name { font-size:13px; font-weight:620; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .identity { color:var(--color-token-text-secondary,#666); font-size:11px; line-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rows { border-top:1px solid color-mix(in oklab,currentColor 9%,transparent); display:grid; gap:7px; margin-top:9px; padding-top:9px; }
+    .row { align-items:baseline; display:flex; font-size:12px; gap:12px; justify-content:space-between; }
+    .key { color:var(--color-token-text-secondary,#666); }
+    .value { font-variant-numeric:tabular-nums; text-align:right; }
+    .tibo { align-items:center; border-top:1px solid color-mix(in oklab,currentColor 9%,transparent); color:var(--color-token-text-secondary,#666); display:flex; font-size:11px; justify-content:space-between; margin-top:9px; padding-top:9px; text-decoration:none; }
+    .tibo:hover { color:var(--color-token-text-primary,#202020); }
+  </style><section class="tooltip" role="tooltip"><div class="name"></div><div class="identity"></div><div class="rows"><div class="row"><span class="key">Remaining</span><span class="value remaining">—</span></div><div class="row"><span class="key">Resets</span><span class="value reset">—</span></div></div><a class="tibo" href="https://x.com/thsottiaux" target="_blank" rel="noreferrer"><span>Tibo on X</span><span>@thsottiaux ↗</span></a></section>\`;
+  const tooltip = tooltipShadow.querySelector(".tooltip");
+  let latestSnapshot = null;
+  let tooltipTimer = null;
+  let tooltipHideTimer = null;
+  const hideTooltip = () => { clearTimeout(tooltipTimer);clearTimeout(tooltipHideTimer);tooltip.dataset.open = "false"; };
+  const scheduleTooltipHide = () => { clearTimeout(tooltipHideTimer);tooltipHideTimer=setTimeout(()=>{tooltip.dataset.open="false";},160); };
+  const showTooltip = () => {
+    clearTimeout(tooltipTimer);
+    clearTimeout(tooltipHideTimer);
+    tooltipTimer = setTimeout(() => {
+      const account = latestSnapshot?.account;
+      const profile = document.querySelector('button[aria-label="Open profile menu"]');
+      const profileName = profile?.innerText?.trim()?.split("\\n")[0];
+      const email = account?.email || "Account email unavailable";
+      tooltip.querySelector(".name").textContent = profileName || account?.email?.split("@")[0] || "Codex account";
+      tooltip.querySelector(".identity").textContent = account?.planType ? email + " · " + account.planType : email;
+      tooltip.querySelector(".remaining").textContent = typeof latestSnapshot?.remainingPercent === "number" ? Math.round(latestSnapshot.remainingPercent) + "%" : "—";
+      const resetAt = latestSnapshot?.resetAt ? new Date(latestSnapshot.resetAt) : null;
+      tooltip.querySelector(".reset").textContent = resetAt && Number.isFinite(resetAt.getTime()) ? new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(resetAt) : "Unavailable";
+      const rect = meter.getBoundingClientRect();
+      tooltip.style.left = Math.max(8, Math.min(innerWidth - 256, rect.left)) + "px";
+      tooltip.style.top = Math.min(innerHeight - 20, rect.bottom + 7) + "px";
+      tooltip.dataset.open = "true";
+    }, 350);
+  };
+  meter.addEventListener("mouseenter", showTooltip);
+  meter.addEventListener("mouseleave", scheduleTooltipHide);
+  tooltip.addEventListener("mouseenter",()=>clearTimeout(tooltipHideTimer));
+  tooltip.addEventListener("mouseleave",scheduleTooltipHide);
+  document.body.append(tooltipHost);
+
   const place = () => {
     const labels = ["Toggle pinned summary", "Toggle bottom panel", "Toggle side panel"];
     const candidates = labels.flatMap((label) => Array.from(document.querySelectorAll('button[aria-label="' + label + '"]')));
@@ -90,10 +142,13 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   window.__codexionMeterObserver = observer;
   window.__codexionMeterCleanup = () => {
     observer.disconnect();
+    hideTooltip();
     host.remove();
+    tooltipHost.remove();
   };
 
   window.__codexionUpdateSanityMeter = (snapshot) => {
+    latestSnapshot = snapshot;
     if (!snapshot || typeof snapshot.usedPercent !== "number" || !Number.isFinite(snapshot.usedPercent)) {
       label.textContent = "—";
       host.dataset.level = "unknown";

@@ -41,6 +41,8 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
       .trigger svg { height:15px; width:15px; }
       .badge { align-items:center; background:var(--color-token-text-primary,#202020); border:2px solid var(--color-token-bg-primary,#fff); border-radius:9px; color:var(--color-token-bg-primary,#fff); display:none; font-size:9px; font-weight:650; height:15px; justify-content:center; min-width:15px; padding:0 2px; position:absolute; right:0; top:0; }
       .badge[data-visible="true"] { display:flex; }
+      .trigger-tooltip { background:var(--color-token-text-primary,#202020); border-radius:7px; color:var(--color-token-bg-primary,#fff); display:none; font-size:11px; line-height:16px; padding:5px 8px; pointer-events:none; position:fixed; white-space:nowrap; z-index:2147483647; }
+      .trigger-tooltip[data-open="true"] { display:block; }
       .surface { background:var(--color-background-panel,var(--color-token-bg-primary,#fff)); border:1px solid color-mix(in oklab,currentColor 12%,transparent); border-radius:12px; box-shadow:0 14px 38px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.08); color:var(--color-token-text-primary,#202020); display:none; overflow:hidden; position:fixed; width:360px; z-index:2147483646; }
       .surface[data-open="true"] { display:block; }
       .header { align-items:center; border-bottom:1px solid color-mix(in oklab,currentColor 9%,transparent); display:flex; gap:8px; height:44px; padding:0 8px 0 14px; }
@@ -96,11 +98,13 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     <button class="trigger" aria-label="Open GitHub issue inbox" aria-expanded="false">
       <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.23.49-2.7-1.08-2.7-1.08-.37-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82A7.6 7.6 0 0 1 8 3.73c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.74.54 1.5l-.01 2.31c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span class="badge"></span>
     </button>
+    <span class="trigger-tooltip" role="tooltip">GitHub Issues</span>
     <section class="surface" role="menu"><div class="header"><div class="header-title"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.23.49-2.7-1.08-2.7-1.08-.37-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82A7.6 7.6 0 0 1 8 3.73c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.66 3.95.29.25.54.74.54 1.5l-.01 2.31c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg><span>Issues</span></div><div class="header-tools"><button class="scope" role="switch" aria-checked="false" aria-label="Show current repository only"><span>Current repo</span><span class="switch"></span></button><button class="icon-button refresh" title="Refresh" aria-label="Refresh issues"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 5V2.5L11.5 4A5.5 5.5 0 1 0 13.2 9" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="icon-button settings" title="Codexion settings" aria-label="Open Codexion settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35"><circle cx="8" cy="8" r="2.1"/><path d="M6.8 2.1h2.4l.45 1.45 1.1.65 1.5-.32 1.2 2.08-1.04 1.1v1.28l1.04 1.1-1.2 2.08-1.5-.32-1.1.65-.45 1.45H6.8l-.45-1.45-1.1-.65-1.5.32-1.2-2.08 1.04-1.1V7.06l-1.04-1.1 1.2-2.08 1.5.32 1.1-.65z" stroke-linejoin="round"/></svg></button></div></div><div class="error" hidden></div><div class="list"></div></section>
     <div class="dialog-backdrop"><section class="dialog" role="dialog" aria-modal="true" aria-label="Codexion settings"><div class="dialog-head"><span class="dialog-title">Codexion · GitHub Issues</span><button class="icon-button close">✕</button></div><div class="dialog-body"><div class="status">Checking GitHub CLI…</div><input class="repo-filter" placeholder="Filter repositories"/><div class="repos"></div></div></section></div>
   \`;
   const trigger = shadow.querySelector(".trigger");
   const badge = shadow.querySelector(".badge");
+  const triggerTooltip = shadow.querySelector(".trigger-tooltip");
   const surface = shadow.querySelector(".surface");
   const list = shadow.querySelector(".list");
   const errorBox = shadow.querySelector(".error");
@@ -118,6 +122,9 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
   let currentThreadId = null;
   window.__codexionIssueActions = [];
   const queue = (action) => window.__codexionIssueActions.push(action);
+  let triggerTooltipTimer = null;
+  const hideTriggerTooltip = () => { clearTimeout(triggerTooltipTimer); triggerTooltip.dataset.open="false"; };
+  const showTriggerTooltip = () => { clearTimeout(triggerTooltipTimer); triggerTooltipTimer=setTimeout(()=>{const rect=trigger.getBoundingClientRect();triggerTooltip.style.left=Math.max(8,Math.min(innerWidth-100,rect.left+(rect.width/2)-42))+"px";triggerTooltip.style.top=Math.min(innerHeight-20,rect.bottom+7)+"px";triggerTooltip.dataset.open="true";},350); };
   const position = () => {
     const rect = trigger.getBoundingClientRect();
     surface.style.transform = "none";
@@ -128,7 +135,8 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     if (Math.abs(correction) > 0.5) surface.style.transform = "translateX(" + correction + "px)";
   };
   const closeMenu = () => { surface.dataset.open = "false"; trigger.setAttribute("aria-expanded", "false"); };
-  trigger.onclick = (event) => { event.stopPropagation(); const open = surface.dataset.open !== "true"; surface.dataset.open=String(open); trigger.setAttribute("aria-expanded",String(open)); if(open){position();prefetchCurrentRepository();} };
+  trigger.addEventListener("mouseenter",showTriggerTooltip);trigger.addEventListener("mouseleave",hideTriggerTooltip);trigger.addEventListener("focus",showTriggerTooltip);trigger.addEventListener("blur",hideTriggerTooltip);
+  trigger.onclick = (event) => { hideTriggerTooltip(); event.stopPropagation(); const open = surface.dataset.open !== "true"; surface.dataset.open=String(open); trigger.setAttribute("aria-expanded",String(open)); if(open){position();prefetchCurrentRepository();} };
   shadow.querySelector(".refresh").onclick = () => currentScope?prefetchCurrentRepository(true):queue({type:"refresh"});
   shadow.querySelector(".settings").onclick = () => { closeMenu(); void openCodexionSettings(); };
   shadow.querySelector(".close").onclick = () => backdrop.dataset.open="false";
@@ -335,7 +343,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
   };
   window.__codexionDrainIssueActions = () => window.__codexionIssueActions.splice(0);
   overlayHost=document.createElement("span");overlayHost.id="codexion-issue-inbox-overlay";overlayHost.style.inset="0";overlayHost.style.pointerEvents="none";overlayHost.style.position="fixed";overlayHost.style.zIndex="2147483646";
-  const overlayShadow=overlayHost.attachShadow({mode:"open"});overlayShadow.append(shadow.querySelector("style").cloneNode(true),surface,backdrop);surface.style.pointerEvents="auto";backdrop.style.pointerEvents="auto";document.body.append(overlayHost);
+  const overlayShadow=overlayHost.attachShadow({mode:"open"});overlayShadow.append(shadow.querySelector("style").cloneNode(true),surface,backdrop,triggerTooltip);surface.style.pointerEvents="auto";backdrop.style.pointerEvents="auto";document.body.append(overlayHost);
   const place = () => {
     const labels=["Toggle pinned summary","Toggle bottom panel","Toggle side panel"];
     const candidates=labels.flatMap(label=>Array.from(document.querySelectorAll('button[aria-label="'+label+'"]')));
@@ -358,7 +366,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     const threadId=activeThreadId();if(threadId!==currentThreadId)prefetchCurrentRepository();
   };
   place(); const observer=new MutationObserver(place); observer.observe(document.body,{attributes:true,attributeFilter:["data-app-action-sidebar-thread-active"],childList:true,subtree:true});
-  window.__codexionIssueInboxCleanup=()=>{observer.disconnect();document.removeEventListener("pointerdown",window.__codexionIssueOutside,true);document.removeEventListener("click",handleSettingsNavigation,true);closeNativePage();nativeButton?.remove();host.remove();overlayHost?.remove();};
+  window.__codexionIssueInboxCleanup=()=>{observer.disconnect();hideTriggerTooltip();document.removeEventListener("pointerdown",window.__codexionIssueOutside,true);document.removeEventListener("click",handleSettingsNavigation,true);closeNativePage();nativeButton?.remove();host.remove();overlayHost?.remove();};
   return true;
 })()`;
 

@@ -10,6 +10,7 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('"Toggle bottom panel"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("meterHost.nextSibling");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('classList?.contains("contents")');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('role="tooltip">GitHub Issues');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('nav[aria-label="Settings"]');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-settings-nav");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-issue-inbox-overlay");
