@@ -18,6 +18,7 @@ jobs:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v7
 
@@ -49,7 +50,7 @@ jobs:
         env:
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          for name in MACOS_CERTIFICATE_BASE64 MACOS_CERTIFICATE_PASSWORD APPLE_ID APPLE_TEAM_ID APPLE_APP_SPECIFIC_PASSWORD; do
+          for name in MACOS_CERTIFICATE_BASE64 MACOS_CERTIFICATE_PASSWORD APPLE_ID APPLE_TEAM_ID APPLE_APP_SPECIFIC_PASSWORD SPARKLE_PRIVATE_KEY; do
             if [[ -z "${!name:-}" ]]; then
               echo "Missing required GitHub Actions secret: $name" >&2
               exit 1
@@ -107,6 +108,23 @@ jobs:
           hdiutil verify "$DMG"
           (cd build/macos && shasum -a 256 "Codexion-v$VERSION-arm64.dmg" > "Codexion-v$VERSION-arm64.dmg.sha256")
 
+      - name: Generate signed Sparkle appcast
+        run: |
+          RELEASE_DIR="build/macos/sparkle-release"
+          mkdir -p "$RELEASE_DIR"
+          cp "build/macos/Codexion-v$VERSION-arm64.zip" "$RELEASE_DIR/"
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | \
+            build/dependencies/sparkle-2.9.2/bin/generate_appcast \
+              --ed-key-file - \
+              --download-url-prefix "https://github.com/lyuai/codexion/releases/download/v$VERSION/" \
+              --link "https://github.com/lyuai/codexion/releases/tag/v$VERSION" \
+              --maximum-versions 1 \
+              --maximum-deltas 0 \
+              --disable-signing-warning \
+              -o "build/macos/appcast.xml" \
+              "$RELEASE_DIR"
+          test -s build/macos/appcast.xml
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -115,6 +133,7 @@ jobs:
             "build/macos/Codexion-v$VERSION-arm64.dmg" \
             "build/macos/Codexion-v$VERSION-arm64.dmg.sha256" \
             "build/macos/Codexion-v$VERSION-arm64.zip" \
+            "build/macos/appcast.xml" \
             --verify-tag \
             --generate-notes \
             --title "Codexion $GITHUB_REF_NAME"

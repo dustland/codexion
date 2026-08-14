@@ -9,119 +9,65 @@ export const INSTALL_METER_EXPRESSION = `(() => {
 
   const host = document.createElement("span");
   host.id = meterId;
-  host.style.inset = "0";
+  host.setAttribute("role", "status");
+  host.setAttribute("aria-label", "Weekly usage unavailable");
   host.style.pointerEvents = "none";
-  host.style.position = "absolute";
-  host.style.zIndex = "0";
 
   const shadow = host.attachShadow({ mode: "open" });
   const style = document.createElement("style");
   style.textContent = \`
     :host {
-      border-radius: 6px;
-      display: block;
-      overflow: hidden;
+      align-items: center;
+      color: var(--color-token-text-tertiary, currentColor);
+      display: inline-flex;
+      flex: none;
+      height: 28px;
     }
-    .track, .fill {
-      bottom: 0;
-      left: 0;
-      position: absolute;
-      top: 0;
+    .meter {
+      align-items: center;
+      display: flex;
+      gap: 5px;
+      height: 28px;
+      padding: 0 5px;
     }
-    .track {
-      background: color-mix(in oklab, currentColor 3%, transparent);
-      right: 0;
-    }
-    .fill {
-      background: color-mix(in oklab, currentColor 9%, transparent);
-      box-shadow: inset -1px 0 color-mix(in oklab, currentColor 5%, transparent);
-      transition: width 180ms ease-out;
-      width: 0;
+    svg {
+      height: 15px;
+      width: 15px;
     }
     .label {
-      align-items: center;
-      bottom: 0;
-      color: var(--color-token-text-tertiary, currentColor);
-      display: flex;
-      font: 550 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 550 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-variant-numeric: tabular-nums;
-      position: absolute;
-      right: 8px;
-      top: 0;
+      min-width: 27px;
     }
-    :host([data-level="high"]) .label {
+    :host([data-level="high"]) {
       color: var(--color-token-destructive-foreground, #d45b5b);
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .fill { transition: none; }
     }
   \`;
 
-  const track = document.createElement("span");
-  track.className = "track";
-  const fill = document.createElement("span");
-  fill.className = "fill";
+  const meter = document.createElement("span");
+  meter.className = "meter";
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("fill", "none");
+  icon.setAttribute("stroke", "currentColor");
+  icon.setAttribute("stroke-width", "1.5");
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = '<path d="M2.25 11.75a6 6 0 1 1 11.5 0" stroke-linecap="round"/><path d="m8 8 3-2" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/>';
   const label = document.createElement("span");
   label.className = "label";
   label.textContent = "—";
-  shadow.append(style, track, fill, label);
-
-  let currentProfile = null;
-  let originalProfileStyles = null;
-  let decoratedChildren = [];
-
-  const restoreProfile = () => {
-    if (!currentProfile || !originalProfileStyles) return;
-    currentProfile.style.position = originalProfileStyles.position;
-    currentProfile.style.overflow = originalProfileStyles.overflow;
-    currentProfile.style.paddingRight = originalProfileStyles.paddingRight;
-    if (originalProfileStyles.ariaDescription === null) {
-      currentProfile.removeAttribute("aria-description");
-    } else {
-      currentProfile.setAttribute("aria-description", originalProfileStyles.ariaDescription);
-    }
-    for (const child of decoratedChildren) {
-      child.element.style.position = child.position;
-      child.element.style.zIndex = child.zIndex;
-    }
-    decoratedChildren = [];
-    currentProfile = null;
-    originalProfileStyles = null;
-  };
+  meter.append(icon, label);
+  shadow.append(style, meter);
 
   const place = () => {
-    const profile = document.querySelector('button[aria-label="Open profile menu"]');
-    if (!profile) {
-      restoreProfile();
+    const anchor = document.querySelector('button[aria-label="Toggle pinned summary"]');
+    const group = anchor?.parentElement;
+    if (!group) {
       host.remove();
       return;
     }
-    if (currentProfile === profile && host.parentElement === profile) return;
-
-    restoreProfile();
-    currentProfile = profile;
-    originalProfileStyles = {
-      ariaDescription: profile.getAttribute("aria-description"),
-      overflow: profile.style.overflow,
-      paddingRight: profile.style.paddingRight,
-      position: profile.style.position,
-    };
-    profile.style.position = "relative";
-    profile.style.overflow = "hidden";
-    profile.style.paddingRight = "48px";
-    profile.append(host);
-
-    decoratedChildren = Array.from(profile.children)
-      .filter((child) => child !== host)
-      .map((child) => ({
-        element: child,
-        position: child.style.position,
-        zIndex: child.style.zIndex,
-      }));
-    for (const child of decoratedChildren) {
-      child.element.style.position = "relative";
-      child.element.style.zIndex = "1";
-    }
+    if (host.parentElement === group) return;
+    group.insertBefore(host, group.firstChild);
   };
 
   place();
@@ -130,24 +76,21 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   window.__codexionMeterObserver = observer;
   window.__codexionMeterCleanup = () => {
     observer.disconnect();
-    restoreProfile();
     host.remove();
   };
 
   window.__codexionUpdateSanityMeter = (snapshot) => {
     if (!snapshot || typeof snapshot.usedPercent !== "number" || !Number.isFinite(snapshot.usedPercent)) {
-      fill.style.width = "0";
       label.textContent = "—";
       host.dataset.level = "unknown";
-      currentProfile?.setAttribute("aria-description", "Weekly usage unavailable");
+      host.setAttribute("aria-label", "Weekly usage unavailable");
       return;
     }
     const used = Math.max(0, Math.min(100, Math.round(snapshot.usedPercent)));
     const remaining = 100 - used;
-    fill.style.width = String(remaining) + "%";
     label.textContent = String(remaining) + "%";
     host.dataset.level = remaining <= 15 ? "high" : remaining <= 40 ? "medium" : "low";
-    currentProfile?.setAttribute("aria-description", String(remaining) + "% weekly usage remaining");
+    host.setAttribute("aria-label", String(remaining) + "% weekly usage remaining");
   };
   return true;
 })()`;

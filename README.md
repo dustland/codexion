@@ -15,9 +15,10 @@ Codexion is a lightweight local companion for Codex Desktop. It safely launches 
 desktop app and uses the loopback Chrome DevTools Protocol (CDP) to provide small, restrained UI
 enhancements without modifying the installed application.
 
-Codexion currently includes two extensions. **Sanity Meter** augments the existing profile trigger in the Codex
-sidebar footer with the remaining weekly percentage and a full-width progress track. For example,
-`82%` means 82% of the weekly allowance remains. The native profile menu behavior is preserved.
+Codexion currently includes two extensions. **Sanity Meter** adds a compact speedometer and the
+remaining weekly percentage to the native title-bar actions. For example, `82%` means 82% of the
+weekly allowance remains. Moving the indicator out of the sidebar leaves room for native footer
+features such as Voice.
 
 **GitHub Issue Inbox** adds a compact trigger beside the native title-bar actions. It polls selected
 repositories through the locally installed and authenticated GitHub CLI, excludes issues authored
@@ -55,7 +56,9 @@ Issue Inbox is optional. It requires [GitHub CLI](https://cli.github.com/) and a
 Tagged releases provide a signed and notarized Apple Silicon `Codexion.app` in a DMG. Download the
 DMG from [GitHub Releases](https://github.com/lyuai/codexion/releases), drag Codexion to
 Applications, and open it. The app is a background launcher and companion, so it does not add a
-second settings window or Dock UI.
+second settings window or Dock UI. Releases that include the built-in updater check the signed
+GitHub release feed automatically while Codexion is running. An installation from an older release
+without the updater needs one final manual DMG upgrade.
 
 ### From source
 
@@ -100,7 +103,7 @@ pnpm start -- \
 6. Wait for the endpoint and verify that the newly launched PID owns it.
 7. Select the main renderer instead of auxiliary views such as the avatar overlay.
 8. Read a normalized weekly snapshot and non-secret account identity from the Codex app-server.
-9. Update the profile trigger percentage and progress fill every minute.
+9. Update the title-bar speedometer and remaining percentage every minute.
 10. Poll selected GitHub repositories and render unhandled issues in the title bar.
 
 Usage retrieval and UI injection are intentionally separate: app-server provides data, while CDP

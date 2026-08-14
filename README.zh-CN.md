@@ -14,9 +14,9 @@
 Codexion 是一个轻量的 Codex Desktop 本地 Companion。它负责安全地启动或接管
 Codex Desktop，并通过本机 Chrome DevTools Protocol（CDP）添加小型、克制的界面增强。
 
-Codexion 目前包含两个功能。**Sanity Meter** 直接增强 Codex 侧边栏底部现有的账户按钮，在右侧
-显示周额度剩余百分比，并以整个按钮为 100% 进度轨道。例如 `82%` 表示本周额度还剩
-82%。Codex 原有的账户菜单行为保持不变。
+Codexion 目前包含两个功能。**Sanity Meter** 在窗口右上角的原生操作区显示紧凑的速度表图标
+和周额度剩余百分比。例如 `82%` 表示本周额度还剩 82%。将它移出侧边栏，可以为 Voice 等
+Codex 原生 footer 功能保留空间。
 
 **GitHub Issue Inbox** 在右上角原生操作按钮旁增加一个紧凑入口。它通过本机已经登录的
 GitHub CLI 轮询用户选择的仓库，排除本人创建或已经回复过的 issue，并提供“处理”和“忽略”。
@@ -53,6 +53,8 @@ Issue Inbox 是可选功能，需要安装 [GitHub CLI](https://cli.github.com/)
 带版本 tag 的 Release 会提供经过签名和公证的 Apple Silicon `Codexion.app` DMG。请从
 [GitHub Releases](https://github.com/lyuai/codexion/releases) 下载 DMG，将 Codexion 拖入
 Applications 后打开。它是后台启动器与 companion，不会增加第二套设置窗口或 Dock UI。
+内置更新器的新版本会在 Codexion 运行期间自动检查经过签名的 GitHub Release 更新。若当前
+安装的是尚未包含更新器的旧版本，需要最后手动安装一次新版 DMG。
 
 ### 从源码运行
 
@@ -98,7 +100,7 @@ pnpm start -- \
 6. 等待端口就绪，再次确认监听者就是新启动的 Codex 进程。
 7. 连接主 renderer，而不是头像浮层等辅助 renderer。
 8. 通过 Codex app-server 获取标准化的周用量快照和非敏感账户身份。
-9. 每分钟更新账户按钮中的剩余百分比和进度填充。
+9. 每分钟更新右上角的速度表图标与剩余百分比。
 10. 轮询选定的 GitHub 仓库，并在右上角显示未处理 issue。
 
 数据读取与 UI 注入相互独立：app-server 负责用量，CDP 只负责显示。这避免了依赖

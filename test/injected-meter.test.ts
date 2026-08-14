@@ -1,0 +1,25 @@
+import { describe, expect, it } from "vitest";
+import { createMeterUpdateExpression, INSTALL_METER_EXPRESSION } from "../src/ui/injected-meter.js";
+
+describe("injected sanity meter", () => {
+  it("places a compact speedometer before the native title-bar actions", () => {
+    expect(INSTALL_METER_EXPRESSION).toContain('button[aria-label="Toggle pinned summary"]');
+    expect(INSTALL_METER_EXPRESSION).toContain('viewBox", "0 0 16 16"');
+    expect(INSTALL_METER_EXPRESSION).toContain("Weekly usage unavailable");
+    expect(INSTALL_METER_EXPRESSION).not.toContain('button[aria-label="Open profile menu"]');
+    expect(INSTALL_METER_EXPRESSION).not.toContain("paddingRight");
+  });
+
+  it("updates the remaining weekly percentage", () => {
+    const expression = createMeterUpdateExpression({
+      account: null,
+      usedPercent: 17,
+      remainingPercent: 83,
+      resetAt: null,
+      observedAt: new Date("2026-08-14T00:00:00.000Z"),
+    });
+
+    expect(expression).toContain('"usedPercent":17');
+    expect(expression).toContain("__codexionUpdateSanityMeter");
+  });
+});
