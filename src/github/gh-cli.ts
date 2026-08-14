@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { accessSync, constants } from "node:fs";
 import { promisify } from "node:util";
 import type { GithubCliStatus, GithubRepository, IssueReference } from "./types.js";
 
@@ -91,12 +92,36 @@ export class GithubCli {
 }
 
 async function runGh(arguments_: string[]): Promise<string> {
-  const { stdout } = await execFileAsync("gh", arguments_, {
+  const { stdout } = await execFileAsync(resolveGhExecutable(), arguments_, {
     encoding: "utf8",
     maxBuffer: 20 * 1024 * 1024,
     timeout: 30_000,
   });
   return stdout;
+}
+
+export function resolveGhExecutable(
+  configured = process.env.CODEXION_GH_PATH,
+  path = process.env.PATH,
+): string {
+  if (configured) return configured;
+  const candidates = [
+    ...(path ?? "")
+      .split(":")
+      .filter(Boolean)
+      .map((directory) => `${directory}/gh`),
+    "/opt/homebrew/bin/gh",
+    "/usr/local/bin/gh",
+  ];
+  for (const candidate of new Set(candidates)) {
+    try {
+      accessSync(candidate, constants.X_OK);
+      return candidate;
+    } catch {
+      // Continue to the next conventional CLI location.
+    }
+  }
+  return "gh";
 }
 
 function parseRepository(value: unknown): GithubRepository | null {

@@ -3,6 +3,7 @@
 import { pathToFileURL } from "node:url";
 import { attachToCodex } from "./attach.js";
 import { diagnoseCodex, startCodexWithCdp } from "./lifecycle/codex-app.js";
+import { CODEXION_VERSION } from "./version.js";
 
 export { fetchTargets, isMainRendererTarget, waitForMainRenderer } from "./cdp/discovery.js";
 export { CdpSession } from "./cdp/session.js";
@@ -15,7 +16,7 @@ export { attachToCodex };
 
 export const codexion = {
   name: "Codexion",
-  version: "0.2.0",
+  version: CODEXION_VERSION,
   firstFeature: "Sanity Meter",
 } as const;
 

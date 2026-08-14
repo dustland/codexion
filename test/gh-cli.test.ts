@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GithubCli } from "../src/github/gh-cli.js";
+import { GithubCli, resolveGhExecutable } from "../src/github/gh-cli.js";
 
 describe("GithubCli", () => {
   it("filters issues authored or commented on by the viewer", async () => {
@@ -22,6 +22,10 @@ describe("GithubCli", () => {
       throw new Error("spawn gh ENOENT");
     });
     expect(await cli.status()).toMatchObject({ installed: false, authenticated: false });
+  });
+
+  it("honors an explicit gh executable for GUI app environments", () => {
+    expect(resolveGhExecutable("/custom/bin/gh", "/usr/bin:/bin")).toBe("/custom/bin/gh");
   });
 });
 

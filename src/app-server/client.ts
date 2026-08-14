@@ -2,6 +2,7 @@ import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
+import { CODEXION_VERSION } from "../version.js";
 
 interface RpcResponse {
   error?: { message?: string };
@@ -41,7 +42,7 @@ export class CodexAppServerClient {
     try {
       await client.request("initialize", {
         capabilities: null,
-        clientInfo: { name: "codexion", title: "Codexion", version: "0.2.0" },
+        clientInfo: { name: "codexion", title: "Codexion", version: CODEXION_VERSION },
       });
       return client;
     } catch (error) {

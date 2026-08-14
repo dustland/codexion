@@ -6,6 +6,14 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.1 - 2026-08-14
+
+### Fixed
+
+- Locate Homebrew GitHub CLI installations when Codexion is launched from Finder with the minimal
+  macOS GUI `PATH`.
+- Show the installed Codexion version at the bottom of its Settings page.
+
 ## 0.2.0 - 2026-08-14
 
 ### Added

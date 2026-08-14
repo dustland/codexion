@@ -45,7 +45,7 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
         let process = Process()
         process.executableURL = coreURL
         process.arguments = Array(CommandLine.arguments.dropFirst())
-        process.environment = ProcessInfo.processInfo.environment
+        process.environment = coreEnvironment()
         try process.run()
         coreProcess = process
 
@@ -60,6 +60,17 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.terminate(nil)
             }
         }
+    }
+
+    private func coreEnvironment() -> [String: String] {
+        var environment = ProcessInfo.processInfo.environment
+        let existing = environment["PATH", default: "/usr/bin:/bin:/usr/sbin:/sbin"]
+        let preferred = ["/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin"]
+        let entries = existing.split(separator: ":").map(String.init)
+        environment["PATH"] = (preferred + entries).reduce(into: [String]()) { result, entry in
+            if !result.contains(entry) { result.append(entry) }
+        }.joined(separator: ":")
+        return environment
     }
 }
 
