@@ -43,7 +43,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
       .trigger { align-items:center; background:transparent; border:0; border-radius:6px; color:var(--color-token-text-tertiary,rgba(0,0,0,.5)); cursor:pointer; display:flex; height:28px; justify-content:center; min-width:28px; padding:0 6px; position:relative; }
       .trigger:hover, .trigger[aria-expanded="true"] { background:color-mix(in oklab,currentColor 8%,transparent); }
       .trigger svg { height:15px; width:15px; }
-      .badge { align-items:center; background:var(--color-token-text-primary,#202020); border:2px solid var(--color-token-bg-primary,#fff); border-radius:9px; color:var(--color-token-bg-primary,#fff); display:none; font-size:9px; font-weight:650; height:15px; justify-content:center; min-width:15px; padding:0 2px; position:absolute; right:0; top:0; }
+      .badge { align-items:center; background:var(--color-token-text-secondary,#666); border:1.5px solid var(--color-token-bg-primary,#fff); border-radius:7px; box-sizing:border-box; color:var(--color-token-bg-primary,#fff); display:none; font-size:8px; font-weight:650; height:12px; justify-content:center; min-width:12px; padding:0 2px; position:absolute; right:-3px; top:-6px; }
       .badge[data-visible="true"] { display:flex; }
       .trigger-tooltip { background:var(--color-token-text-primary,#202020); border-radius:7px; color:var(--color-token-bg-primary,#fff); display:none; font-size:11px; line-height:16px; padding:5px 8px; pointer-events:none; position:fixed; white-space:nowrap; z-index:2147483647; }
       .trigger-tooltip[data-open="true"] { display:block; }

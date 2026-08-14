@@ -6,6 +6,12 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.9 - 2026-08-15
+
+### Changed
+
+- Reduce and offset the Issues count badge so the circle-dot symbol remains clearly visible.
+
 ## 0.2.8 - 2026-08-15
 
 ### Fixed
