@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.3 - 2026-08-14
+
+### Fixed
+
+- Keep the quota meter at the left edge of the right-side title-bar action group, followed by the
+  GitHub Issue Inbox and then Codex's native controls.
+
 ## 0.2.2 - 2026-08-14
 
 ### Fixed

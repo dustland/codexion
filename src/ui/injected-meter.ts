@@ -71,8 +71,10 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       host.remove();
       return;
     }
-    if (host.parentElement === group) return;
-    group.insertBefore(host, group.firstChild);
+    const issueHost = document.getElementById("codexion-issue-inbox-host");
+    const reference = issueHost?.parentElement === group ? issueHost : group.firstChild;
+    if (host.parentElement === group && (reference === host || host.nextSibling === issueHost)) return;
+    group.insertBefore(host, reference);
   };
 
   place();
