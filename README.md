@@ -1,4 +1,8 @@
-# Codexion
+<p align="center">
+  <img src="assets/codexion-mark.svg" width="88" height="88" alt="Codexion logo">
+</p>
+
+<h1 align="center">Codexion</h1>
 
 **English** | [简体中文](README.zh-CN.md)
 
@@ -11,9 +15,19 @@ Codexion is a lightweight local companion for Codex Desktop. It safely launches 
 desktop app and uses the loopback Chrome DevTools Protocol (CDP) to provide small, restrained UI
 enhancements without modifying the installed application.
 
-The first extension is **Sanity Meter**. It augments the existing profile trigger in the Codex
+Codexion currently includes two extensions. **Sanity Meter** augments the existing profile trigger in the Codex
 sidebar footer with the remaining weekly percentage and a full-width progress track. For example,
 `82%` means 82% of the weekly allowance remains. The native profile menu behavior is preserved.
+
+**GitHub Issue Inbox** adds a compact trigger beside the native title-bar actions. It polls selected
+repositories through the locally installed and authenticated GitHub CLI, excludes issues authored
+or already answered by the current user, and offers Handle and Ignore actions. Handling creates one
+Codex task in the repository's matching local workspace; a durable issue-to-thread mapping prevents
+duplicate task creation across refreshes and restarts.
+
+The Inbox header's **Current repo** switch queries the active Codex task's GitHub remote directly,
+even when it is not selected in Settings. If the task has no GitHub remote, Codexion shows a clear
+empty state without changing the saved repository selection.
 
 > Codexion is not a Codex plugin. CDP must be enabled when the desktop process starts, while plugin
 > session hooks run after that process already exists. A standalone companion can coordinate and
@@ -25,11 +39,14 @@ sidebar footer with the remaining weekly percentage and a full-width progress tr
 - Runtime: Node.js 22 or later
 - Default app: `/Applications/ChatGPT.app`
 - Default CDP endpoint: `127.0.0.1:9341`
-- Data sources: the read-only Codex app-server methods `account/rateLimits/read` and `account/read`
-- Refresh interval: 60 seconds
+- Data sources: Codex app-server for usage and the local `gh` CLI for selected repositories
+- Refresh intervals: 60 seconds for usage; 3 minutes for GitHub issues
 
 Codexion does not modify `app.asar`, application binaries, or signed resources. It does not create
 a separate browser profile or require another login.
+
+Issue Inbox is optional. It requires [GitHub CLI](https://cli.github.com/) and an existing
+`gh auth login` session. Codexion never stores the GitHub token.
 
 ## Quick start
 
@@ -75,9 +92,48 @@ pnpm start -- \
 7. Select the main renderer instead of auxiliary views such as the avatar overlay.
 8. Read a normalized weekly snapshot and non-secret account identity from the Codex app-server.
 9. Update the profile trigger percentage and progress fill every minute.
+10. Poll selected GitHub repositories and render unhandled issues in the title bar.
 
 Usage retrieval and UI injection are intentionally separate: app-server provides data, while CDP
 only renders the extension. This avoids coupling data access to unstable renderer HTTP routes.
+
+## GitHub Issue Inbox
+
+1. Install `gh` and run `gh auth login` if it is not already authenticated.
+2. Open Codex Settings.
+3. Choose **Codexion** at the bottom of the **Integrations** section.
+4. Filter and select the repositories to monitor. Changes apply immediately.
+
+The Issue age control limits the Inbox to the last 3, 7, 14, or 30 days, or all open issues. The
+default is 3 days. Each Inbox item shows its age in the upper-right corner.
+
+Use **Current repo** in the Inbox header to temporarily query the repository associated with the
+active Codex task. It does not need to be selected above, and the switch does not change your saved
+repository selection. The main list still follows the configured age window; the three newest
+older eligible issues appear by default in **Older issues**, with the remainder available on
+demand. Empty states name the active window. Codexion prefetches the active task's repository when
+the task changes and keeps a short-lived local cache, so opening the panel normally has no loading
+step. Expired data remains visible while it refreshes in the background; Refresh bypasses the cache.
+The repository catalog used by Codexion Settings is also prefetched at startup and cached for five
+minutes, while selections continue to apply immediately.
+
+Codexion detects known Codex workspaces and matches their `origin` remote to `owner/repository`.
+An issue without a matching local workspace remains visible, but Handle reports a clear error and
+does not create a task. Ignore is local and reversible by editing Codexion state.
+
+Ignored issues appear in the **Ignored Issues** section on the same Settings page. Choose
+**Unignore** to restore one; if it is still open and otherwise eligible, it returns on refresh.
+
+Handled and ignored records are stored at:
+
+```text
+~/Library/Application Support/Codexion/state.json
+```
+
+The Handle action starts a task with the issue number, title, and URL, asks Codex to reproduce and
+fix the problem and run relevant tests, and explicitly forbids posting to GitHub or closing the
+issue without approval. The issue node ID is persisted before and after task creation so a retry
+can reuse a previously created thread instead of opening another one.
 
 ## CLI
 
@@ -125,6 +181,8 @@ curl http://127.0.0.1:9341/json/version
 src/
 ├── lifecycle/  Process identity, normal quit, launch, and port ownership
 ├── cdp/        Loopback target discovery and CDP session
+├── app-server/ Shared Codex app-server JSON-RPC client
+├── github/     gh adapter, repository/workspace discovery, state, and task dispatch
 ├── usage/      App-server provider, response adapters, and UsageSnapshot
 └── ui/         Widget installation, placement, styling, and rendering
 
@@ -158,11 +216,13 @@ background example, resource handling, locator rules, and a security checklist.
 - [x] Verified one-click macOS CDP lifecycle
 - [x] Codex app-server weekly usage provider
 - [x] Native-style Sanity Meter beside the current account
+- [x] Local GitHub Issue Inbox with repository selection and idempotent task dispatch
+- [x] Codexion page in Codex Settings
 - [x] `doctor` diagnostics
 - [ ] Installable macOS companion application
 - [ ] Extension registry and unified enable/disable behavior
 - [ ] Local background and theme extension
-- [ ] Settings UI and one-click native reset
+- [ ] One-click native reset for all extensions
 - [ ] Renderer and app-server compatibility matrix
 
 The roadmap describes direction, not promised release dates. Discuss substantial designs in an

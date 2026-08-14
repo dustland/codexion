@@ -12,6 +12,9 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 - `start`, `attach`, and `doctor` CLI commands.
 - Codex app-server provider using `account/rateLimits/read` and `account/read`.
 - Native-style weekly usage enhancement integrated into the sidebar profile trigger.
+- GitHub Issue Inbox backed by the local authenticated `gh` CLI.
+- Codexion Settings page with repository filtering, multi-selection, and workspace detection.
+- Durable issue-to-thread mapping with interrupted task-start recovery.
 - Contributor, security, extension, and architecture documentation.
 
 ### Changed

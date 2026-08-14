@@ -1,4 +1,8 @@
-# Codexion
+<p align="center">
+  <img src="assets/codexion-mark.svg" width="88" height="88" alt="Codexion logo">
+</p>
+
+<h1 align="center">Codexion</h1>
 
 [English](README.md) | **简体中文**
 
@@ -10,9 +14,18 @@
 Codexion 是一个轻量的 Codex Desktop 本地 Companion。它负责安全地启动或接管
 Codex Desktop，并通过本机 Chrome DevTools Protocol（CDP）添加小型、克制的界面增强。
 
-目前的第一个功能是 **Sanity Meter**：它直接增强 Codex 侧边栏底部现有的账户按钮，在右侧
+Codexion 目前包含两个功能。**Sanity Meter** 直接增强 Codex 侧边栏底部现有的账户按钮，在右侧
 显示周额度剩余百分比，并以整个按钮为 100% 进度轨道。例如 `82%` 表示本周额度还剩
 82%。Codex 原有的账户菜单行为保持不变。
+
+**GitHub Issue Inbox** 在右上角原生操作按钮旁增加一个紧凑入口。它通过本机已经登录的
+GitHub CLI 轮询用户选择的仓库，排除本人创建或已经回复过的 issue，并提供“处理”和“忽略”。
+处理时会在对应的本地 workspace 中创建唯一的 Codex task；本地 issue-thread 映射可避免
+刷新或重启后重复创建。
+
+Inbox 顶部的 **Current repo** 开关会直接查询当前 Codex task 对应的 GitHub 仓库，即使
+该仓库没有在 Settings 中选中也可以使用。如果当前 task 没有 GitHub 远端，Codexion 会
+显示明确的空状态，并且不会修改已经保存的仓库选择。
 
 > Codexion 不是 Codex Plugin。CDP 必须在 Codex Desktop 进程启动时开启，而 Plugin
 > 的会话钩子运行得太晚，无法可靠地为当前进程补上启动参数。因此 Codexion 采用独立
@@ -24,11 +37,14 @@ Codex Desktop，并通过本机 Chrome DevTools Protocol（CDP）添加小型、
 - 运行时：Node.js 22 或更高版本
 - Codex Desktop 默认位置：`/Applications/ChatGPT.app`
 - CDP 默认地址：`127.0.0.1:9341`
-- 数据源：Codex app-server 的只读方法 `account/rateLimits/read` 和 `account/read`
-- UI 更新频率：每 60 秒
+- 数据源：用量来自 Codex app-server，Issue 来自本机 `gh` CLI
+- 更新频率：用量每 60 秒，Issue 每 3 分钟
 
 Codexion 不修改 `app.asar`、应用二进制文件或签名资源，不创建第二份浏览器配置，
 也不要求用户重新登录。
+
+Issue Inbox 是可选功能，需要安装 [GitHub CLI](https://cli.github.com/) 并完成
+`gh auth login`。Codexion 不保存 GitHub token。
 
 ## 快速开始
 
@@ -75,9 +91,43 @@ pnpm start -- \
 7. 连接主 renderer，而不是头像浮层等辅助 renderer。
 8. 通过 Codex app-server 获取标准化的周用量快照和非敏感账户身份。
 9. 每分钟更新账户按钮中的剩余百分比和进度填充。
+10. 轮询选定的 GitHub 仓库，并在右上角显示未处理 issue。
 
 数据读取与 UI 注入相互独立：app-server 负责用量，CDP 只负责显示。这避免了依赖
 renderer 内部、容易变化的私有 HTTP URL。
+
+## GitHub Issue Inbox
+
+1. 确认已经安装 `gh`，并在需要时运行 `gh auth login`。
+2. 打开 Codex Settings。
+3. 在 **Integrations** 分组底部选择 **Codexion**。
+4. 搜索并多选需要监控的仓库，选择会立即生效。
+
+`Issue age` 可以筛选最近 3、7、14、30 天或全部 open issues，默认最近 3 天。Inbox 中
+每个 issue 的右上角会显示距今时间。
+
+Inbox 顶部的 **Current repo** 可临时查询当前 Codex task 对应的仓库，无需先在上面选中，
+也不会更改已经保存的监控仓库。主列表仍遵循已配置的时间范围；更早且仍符合条件的 issue
+会显示在 **Older issues** 区域，默认展示最新的 3 条，其余可按需展开。空状态也会明确说明
+当前时间范围。Codexion 会在当前 task 变化时预取对应仓库，并使用短时本地缓存，因此打开
+面板通常无需等待；缓存过期时会保留旧结果并在后台更新，Refresh 会跳过缓存强制刷新。
+Codexion Settings 使用的仓库目录也会在启动时预取并缓存 5 分钟，仓库选择仍会实时生效。
+
+Codexion 会读取 Codex 已知 workspace，并根据 GitHub `origin` 自动匹配仓库。没有匹配
+workspace 的 issue 仍会显示，但“处理”会给出明确错误且不会创建 task。
+
+被忽略的 issue 会显示在同一设置页的 **Ignored Issues** 区域。选择 **Unignore** 即可
+恢复；如果它仍为 open 且符合其他筛选条件，会在刷新后重新进入 Inbox。
+
+处理和忽略记录保存在：
+
+```text
+~/Library/Application Support/Codexion/state.json
+```
+
+处理动作会把 issue 编号、标题和 URL 发给新 task，要求 Codex 复现问题、实现修复并运行
+相关测试，同时明确禁止未经批准直接回复 GitHub 或关闭 issue。issue node ID 会在 task
+创建前后持久化；中断后的重试会复用已经创建的 thread。
 
 ## CLI
 
@@ -127,6 +177,8 @@ curl http://127.0.0.1:9341/json/version
 src/
 ├── lifecycle/  进程识别、正常退出、启动和端口归属验证
 ├── cdp/        本机 target discovery 与 CDP session
+├── app-server/ 共用的 Codex app-server JSON-RPC client
+├── github/     gh 适配、仓库/workspace 发现、状态与 task 调度
 ├── usage/      app-server provider、响应适配和 UsageSnapshot
 └── ui/         Widget 安装、位置、样式和快照渲染
 
@@ -160,11 +212,13 @@ extension 构建，而不是继续扩张 Sanity Meter 或生命周期模块。
 - [x] 安全的一键 CDP 生命周期
 - [x] app-server 周用量 provider
 - [x] 当前账户旁的原生风格 Sanity Meter
+- [x] 支持仓库多选和幂等 task 调度的 GitHub Issue Inbox
+- [x] Codex Settings 中的 Codexion 页面
 - [x] `doctor` 诊断命令
 - [ ] 可安装的稳定 macOS Companion `.app`
 - [ ] extension registry 和统一启用/禁用机制
 - [ ] 本地背景与主题扩展
-- [ ] 配置面板与一键恢复原生界面
+- [ ] 所有 extension 的一键恢复原生界面
 - [ ] renderer/app-server 兼容性测试矩阵
 
 Roadmap 表示方向，不承诺发布日期。具体设计应先通过 Issue 讨论。

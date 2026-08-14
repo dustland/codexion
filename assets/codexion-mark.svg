@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title description">
+  <title id="title">Codexion</title>
+  <desc id="description">Two nested rounded rectangular strokes forming a layered C.</desc>
+  <path d="M51 10.5H25c-10 0-16.5 7-16.5 17v9c0 10 6.5 17 16.5 17h26" fill="none" stroke="#7467E8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M43 22H29c-5 0-8 3.8-8 9v2c0 5.2 3 9 8 9h14" fill="none" stroke="#A79EF4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

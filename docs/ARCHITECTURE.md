@@ -11,6 +11,10 @@ The system has two independent paths:
 Codex app-server ── account/rateLimits/read + account/read ──> UsageSnapshot
                                                                   │
 Codex renderer <──────────────── loopback CDP <────────────── UI renderer
+
+GitHub API <── authenticated local gh CLI <── Issue Inbox service
+                                                   │
+Codex app-server <── thread/start + turn/start <── Handle action
 ```
 
 App-server provides data. CDP provides a rendering channel. An extension should not scrape data
@@ -56,6 +60,20 @@ Responsibilities:
 
 Non-responsibilities: CDP, DOM access, and credential persistence.
 
+### `github`
+
+Responsibilities:
+
+- Detect the local GitHub CLI and its existing authentication state.
+- List accessible repositories and poll open issues selected by the user.
+- Exclude issues authored or already commented on by the current viewer.
+- Match repositories to known local Codex workspaces using normalized GitHub remotes.
+- Persist ignored issues and the issue ID to thread/turn ID relationship atomically.
+- Start or resume exactly one local Codex task for each handled issue.
+
+Non-responsibilities: storing GitHub credentials, replying to issues, closing issues, or modifying
+repositories outside the selected local workspace.
+
 ### `ui`
 
 Responsibilities:
@@ -66,6 +84,7 @@ Responsibilities:
 - Render the remaining weekly percentage and a full-width progress track.
 - Preserve the native profile trigger behavior and restore modified inline styles on cleanup.
 - Render an honest unavailable state instead of estimating usage.
+- Render the title-bar Issue Inbox and the Codexion page under Settings > Integrations.
 
 Non-responsibilities: account requests and process lifecycle decisions.
 
@@ -91,6 +110,8 @@ merely looks like CDP.
 - CDP has no authentication and must bind only to `127.0.0.1`.
 - Other processes running as the same local user remain part of the threat model.
 - Tokens, cookies, and app-server authentication material must never be printed, stored, or sent.
+- GitHub access uses the existing `gh` credential store; Codexion persists no GitHub token.
+- Handle prompts prohibit posting or closing an issue without explicit approval.
 - Account identity parsing is allowlisted to type, plan type, and email.
 - Codexion does not modify `app.asar`, application binaries, signed files, or Codex settings.
 - A failed normal lifecycle must not fall back to `kill -9`.

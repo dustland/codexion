@@ -1,6 +1,14 @@
 import { waitForMainRenderer } from "./cdp/discovery.js";
 import { CdpSession } from "./cdp/session.js";
+import { GithubIssueInboxService } from "./github/inbox-service.js";
 import { createMeterUpdateExpression, INSTALL_METER_EXPRESSION } from "./ui/injected-meter.js";
+import {
+  createIssueInboxErrorExpression,
+  createIssueInboxUpdateExpression,
+  DRAIN_ISSUE_ACTIONS_EXPRESSION,
+  INSTALL_ISSUE_INBOX_EXPRESSION,
+  type IssueInboxAction,
+} from "./ui/issue-inbox.js";
 import {
   type AppServerUsageProvider,
   createAppServerUsageProvider,
@@ -8,6 +16,8 @@ import {
 import type { UsageProvider, UsageSnapshot } from "./usage/types.js";
 
 const USAGE_POLL_INTERVAL_MS = 60_000;
+const ISSUE_POLL_INTERVAL_MS = 3 * 60_000;
+const ACTION_POLL_INTERVAL_MS = 750;
 
 interface AttachOptions {
   appPath?: string;
@@ -42,6 +52,8 @@ export async function attachToCodex(
   let session: CdpSession | null = null;
   let latestSnapshot: UsageSnapshot | null = null;
   let targetUrl = "";
+  const issueInbox = new GithubIssueInboxService();
+  let actionRunning = false;
 
   const connectRenderer = async (): Promise<CdpSession> => {
     session?.close();
@@ -53,10 +65,80 @@ export async function attachToCodex(
     }
     const connected = await CdpSession.connect(webSocketUrl);
     await connected.evaluate(INSTALL_METER_EXPRESSION);
+    await connected.evaluate(INSTALL_ISSUE_INBOX_EXPRESSION);
     session = connected;
     targetUrl = target.url;
     log(`Sanity Meter attached to ${target.url}`);
     return connected;
+  };
+
+  const updateIssueInbox = async (includeRepositories = false): Promise<void> => {
+    const snapshot = await issueInbox.snapshot(includeRepositories);
+    let connected = session ?? (await connectRenderer());
+    try {
+      await connected.evaluate(createIssueInboxUpdateExpression(snapshot, includeRepositories));
+      if (includeRepositories) {
+        await connected.evaluate(createIssueInboxUpdateExpression(snapshot, false));
+      }
+    } catch {
+      connected.close();
+      session = null;
+      connected = await connectRenderer();
+      await connected.evaluate(createIssueInboxUpdateExpression(snapshot, includeRepositories));
+      if (includeRepositories) {
+        await connected.evaluate(createIssueInboxUpdateExpression(snapshot, false));
+      }
+    }
+  };
+
+  const handleIssueActions = async (): Promise<void> => {
+    if (closed || actionRunning || session === null) return;
+    const actions = await session.evaluate<IssueInboxAction[]>(DRAIN_ISSUE_ACTIONS_EXPRESSION);
+    if (!Array.isArray(actions) || actions.length === 0) return;
+    actionRunning = true;
+    let repositoriesChanged = false;
+    try {
+      for (const action of actions) {
+        if (action.type === "load-settings") await updateIssueInbox(true);
+        if (action.type === "refresh") await updateIssueInbox(false);
+        if (action.type === "resolve-current-repo" && action.threadId !== undefined) {
+          const result = await issueInbox.currentRepositoryIssues(action.threadId, action.force);
+          await session?.evaluate(
+            `window.__codexionSetCurrentRepository?.(${JSON.stringify(action.threadId)}, ${JSON.stringify(result.repository)}, ${JSON.stringify(result.issues)}); true;`,
+          );
+        }
+        if (action.type === "ignore" && action.issueId !== undefined) {
+          await issueInbox.ignore(action.issueId);
+          await updateIssueInbox(false);
+        }
+        if (action.type === "unignore" && action.issueId !== undefined) {
+          await issueInbox.unignore(action.issueId);
+          await session?.evaluate(
+            `window.__codexionIssueUnignored?.(${JSON.stringify(action.issueId)}); true;`,
+          );
+          await updateIssueInbox(false);
+        }
+        if (action.type === "handle" && action.issueId !== undefined) {
+          await issueInbox.handle(action.issueId);
+          await updateIssueInbox(false);
+        }
+        if (action.type === "set-repositories" && action.repositories !== undefined) {
+          await issueInbox.setSelectedRepositories(action.repositories);
+          repositoriesChanged = true;
+        }
+        if (action.type === "set-max-age" && action.maxAgeDays !== undefined) {
+          await issueInbox.setMaxAgeDays(action.maxAgeDays);
+          repositoriesChanged = true;
+        }
+      }
+      if (repositoriesChanged) await updateIssueInbox(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      log(`Issue Inbox action failed: ${message}`);
+      await session?.evaluate(createIssueInboxErrorExpression(message));
+    } finally {
+      actionRunning = false;
+    }
   };
 
   const updateMeter = async (snapshot: UsageSnapshot | null): Promise<void> => {
@@ -97,14 +179,29 @@ export async function attachToCodex(
   };
 
   await connectRenderer();
+  const actionTimer = setInterval(() => {
+    void handleIssueActions().catch((error: unknown) => {
+      log(
+        `Issue Inbox action polling failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
+  }, ACTION_POLL_INTERVAL_MS);
+  const initialIssueInbox = updateIssueInbox(true).catch((error: unknown) => {
+    log(`Issue Inbox refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+  });
   await refresh();
+  await initialIssueInbox;
   const timer = setInterval(() => {
     void refresh().catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       log(`Sanity Meter refresh failed: ${message}`);
     });
   }, USAGE_POLL_INTERVAL_MS);
-
+  const issueTimer = setInterval(() => {
+    void updateIssueInbox(false).catch((error: unknown) => {
+      log(`Issue Inbox refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+    });
+  }, ISSUE_POLL_INTERVAL_MS);
   return {
     close: () => {
       if (closed) {
@@ -112,6 +209,8 @@ export async function attachToCodex(
       }
       closed = true;
       clearInterval(timer);
+      clearInterval(issueTimer);
+      clearInterval(actionTimer);
       session?.close();
       session = null;
       ownedProvider?.close();
