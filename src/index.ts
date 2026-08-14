@@ -15,7 +15,7 @@ export { attachToCodex };
 
 export const codexion = {
   name: "Codexion",
-  version: "0.1.0",
+  version: "0.2.0",
   firstFeature: "Sanity Meter",
 } as const;
 

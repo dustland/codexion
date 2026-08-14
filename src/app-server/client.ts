@@ -41,7 +41,7 @@ export class CodexAppServerClient {
     try {
       await client.request("initialize", {
         capabilities: null,
-        clientInfo: { name: "codexion", title: "Codexion", version: "0.1.0" },
+        clientInfo: { name: "codexion", title: "Codexion", version: "0.2.0" },
       });
       return client;
     } catch (error) {

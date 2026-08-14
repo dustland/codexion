@@ -6,6 +6,21 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.0 - 2026-08-14
+
+### Added
+
+- Signed Sparkle 2 automatic updates for packaged macOS releases.
+- Checksum-pinned Sparkle dependency retrieval and signed appcast generation in the release workflow.
+
+### Changed
+
+- Moved the weekly quota indicator from the crowded sidebar footer to the native title-bar action
+  group, using a compact speedometer icon and remaining percentage.
+- Made Developer ID signing resilient to transient Apple timestamp service failures.
+
+## 0.1.0 - 2026-08-14
+
 ### Added
 
 - Safe macOS lifecycle coordinator for launching Codex Desktop with loopback CDP.
