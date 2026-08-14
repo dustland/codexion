@@ -6,7 +6,8 @@ import {
 
 describe("Issue Inbox UI", () => {
   it("uses semantic native anchors and exposes reversible actions", () => {
-    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('button[aria-label="Toggle pinned summary"]');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('"Toggle pinned summary"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('"Toggle bottom panel"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('nav[aria-label="Settings"]');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-settings-nav");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-issue-inbox-overlay");

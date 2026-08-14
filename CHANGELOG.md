@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.2 - 2026-08-14
+
+### Fixed
+
+- Keep the quota meter and Issue Inbox attached to the visible right-side title-bar action group
+  across both the previous and current Codex Desktop button layouts.
+
 ## 0.2.1 - 2026-08-14
 
 ### Fixed

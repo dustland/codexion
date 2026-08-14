@@ -3,7 +3,9 @@ import { createMeterUpdateExpression, INSTALL_METER_EXPRESSION } from "../src/ui
 
 describe("injected sanity meter", () => {
   it("places a compact speedometer before the native title-bar actions", () => {
-    expect(INSTALL_METER_EXPRESSION).toContain('button[aria-label="Toggle pinned summary"]');
+    expect(INSTALL_METER_EXPRESSION).toContain('"Toggle pinned summary"');
+    expect(INSTALL_METER_EXPRESSION).toContain('"Toggle bottom panel"');
+    expect(INSTALL_METER_EXPRESSION).toContain("rect.x > window.innerWidth / 2");
     expect(INSTALL_METER_EXPRESSION).toContain('viewBox", "0 0 16 16"');
     expect(INSTALL_METER_EXPRESSION).toContain("Weekly usage unavailable");
     expect(INSTALL_METER_EXPRESSION).not.toContain('button[aria-label="Open profile menu"]');

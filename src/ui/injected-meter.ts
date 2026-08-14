@@ -60,7 +60,12 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   shadow.append(style, meter);
 
   const place = () => {
-    const anchor = document.querySelector('button[aria-label="Toggle pinned summary"]');
+    const labels = ["Toggle pinned summary", "Toggle bottom panel", "Toggle side panel"];
+    const candidates = labels.flatMap((label) => Array.from(document.querySelectorAll('button[aria-label="' + label + '"]')));
+    const anchor = candidates.find((button) => {
+      const rect = button.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.x > window.innerWidth / 2;
+    }) || candidates[0];
     const group = anchor?.parentElement;
     if (!group) {
       host.remove();

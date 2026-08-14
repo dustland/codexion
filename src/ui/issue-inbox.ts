@@ -337,7 +337,9 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
   overlayHost=document.createElement("span");overlayHost.id="codexion-issue-inbox-overlay";overlayHost.style.inset="0";overlayHost.style.pointerEvents="none";overlayHost.style.position="fixed";overlayHost.style.zIndex="2147483646";
   const overlayShadow=overlayHost.attachShadow({mode:"open"});overlayShadow.append(shadow.querySelector("style").cloneNode(true),surface,backdrop);surface.style.pointerEvents="auto";backdrop.style.pointerEvents="auto";document.body.append(overlayHost);
   const place = () => {
-    const anchor=document.querySelector('button[aria-label="Toggle pinned summary"]');
+    const labels=["Toggle pinned summary","Toggle bottom panel","Toggle side panel"];
+    const candidates=labels.flatMap(label=>Array.from(document.querySelectorAll('button[aria-label="'+label+'"]')));
+    const anchor=candidates.find(button=>{const rect=button.getBoundingClientRect();return rect.width>0&&rect.height>0&&rect.x>window.innerWidth/2;})||candidates[0];
     const group=anchor?.parentElement;
     if(group && host.parentElement!==group) group.insertBefore(host,group.firstChild);
     const integrationTitle=Array.from(document.querySelectorAll("nav *")).find(e=>e.children.length===0&&e.textContent.trim()==="Integrations");
