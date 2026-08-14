@@ -19,7 +19,13 @@ export const codexion = {
   firstFeature: "Sanity Meter",
 } as const;
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const runningFromMacApp =
+  process.platform === "darwin" && process.execPath.includes(".app/Contents/MacOS/");
+
+if (
+  runningFromMacApp ||
+  (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+) {
   void runCli(process.argv.slice(2)).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`[Codexion] ${message}`);
@@ -28,7 +34,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 }
 
 async function runCli(args: string[]): Promise<void> {
-  const command = args[0] ?? "info";
+  const command = args[0] ?? (runningFromMacApp ? "start" : "info");
   if (command === "info" || command === "--help" || command === "-h") {
     console.log(`${codexion.name} ${codexion.version} — ${codexion.firstFeature}`);
     console.log(

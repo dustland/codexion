@@ -61,6 +61,11 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-max-age"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Ignored Issues");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Issue window");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('role="listbox"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("data-codexion-age-option");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).not.toContain('<select class="cx-age"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="cx-filter-wrap"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="cx-card"><div class="cx-filter-wrap"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('stroke="currentColor"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).not.toContain("Save repositories");
   });

@@ -50,6 +50,15 @@ Issue Inbox is optional. It requires [GitHub CLI](https://cli.github.com/) and a
 
 ## Quick start
 
+### macOS app
+
+Tagged releases provide a signed and notarized Apple Silicon `Codexion.app` in a DMG. Download the
+DMG from [GitHub Releases](https://github.com/lyuai/codexion/releases), drag Codexion to
+Applications, and open it. The app is a background launcher and companion, so it does not add a
+second settings window or Dock UI.
+
+### From source
+
 ```sh
 git clone https://github.com/lyuai/codexion.git
 cd codexion

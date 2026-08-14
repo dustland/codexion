@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Codexion app icon</title>
+  <rect x="32" y="32" width="960" height="960" rx="232" fill="#7467E8"/>
+  <path d="M790 246H410c-144 0-238 100-238 244v44c0 144 94 244 238 244h380" fill="none" stroke="#fff" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M670 394H474c-72 0-116 54-116 118s44 118 116 118h196" fill="none" stroke="#D8D3FF" stroke-width="70" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

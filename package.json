@@ -30,8 +30,9 @@
     "start": "pnpm build && node dist/index.js start",
     "attach": "pnpm build && node dist/index.js attach",
     "doctor": "pnpm build && node dist/index.js doctor",
-    "format": "biome format --write src test package.json tsconfig.json biome.json",
-    "lint": "biome check src test package.json tsconfig.json biome.json"
+    "package:mac": "bash scripts/build-macos-app.sh && bash scripts/create-dmg.sh",
+    "format": "biome format --write src test package.json tsconfig.json biome.json vitest.config.ts",
+    "lint": "biome check src test package.json tsconfig.json biome.json vitest.config.ts"
   },
   "engines": {
     "node": ">=22"
@@ -39,6 +40,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
     "@types/node": "^24.0.0",
+    "esbuild": "^0.28.2",
+    "postject": "1.0.0-alpha.6",
     "typescript": "^5.9.0",
     "vitest": "^4.1.10"
   }

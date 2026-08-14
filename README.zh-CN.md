@@ -48,6 +48,14 @@ Issue Inbox 是可选功能，需要安装 [GitHub CLI](https://cli.github.com/)
 
 ## 快速开始
 
+### macOS App
+
+带版本 tag 的 Release 会提供经过签名和公证的 Apple Silicon `Codexion.app` DMG。请从
+[GitHub Releases](https://github.com/lyuai/codexion/releases) 下载 DMG，将 Codexion 拖入
+Applications 后打开。它是后台启动器与 companion，不会增加第二套设置窗口或 Dock UI。
+
+### 从源码运行
+
 ### 从源码运行
 
 ```sh
