@@ -14,6 +14,9 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
   same dynamically sized title-bar action group when the side panel opens or closes.
 - Keep the GitHub Issues trigger interactive inside the title bar's pointer-transparent layout
   container so its tooltip and menu continue to work with the side panel visible.
+- Use the circle-dot Issues symbol for the inbox trigger and panel title, reserving the GitHub mark
+  for actions that actually open GitHub.
+- Reuse Codex's native Usage speedometer geometry for the quota indicator.
 
 ## 0.2.7 - 2026-08-15
 

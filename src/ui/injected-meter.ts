@@ -33,8 +33,8 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       padding: 0 5px;
     }
     svg {
-      height: 15px;
-      width: 15px;
+      height: 16px;
+      width: 16px;
     }
     .label {
       font: 550 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -49,12 +49,10 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   const meter = document.createElement("span");
   meter.className = "meter";
   const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("viewBox", "0 0 20 20");
   icon.setAttribute("fill", "none");
-  icon.setAttribute("stroke", "currentColor");
-  icon.setAttribute("stroke-width", "1.5");
   icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = '<path d="M2.25 11.75a6 6 0 1 1 11.5 0" stroke-linecap="round"/><path d="m8 8 3-2" stroke-linecap="round"/><circle cx="8" cy="8" r="1" fill="currentColor" stroke="none"/>';
+  icon.innerHTML = '<path d="M10.8343 12.0693C10.0371 12.5295 9.01783 12.2564 8.55759 11.4592C8.09735 10.6621 8.37048 9.64276 9.16763 9.18253C10.1299 8.62697 14.0533 7.64478 14.3311 8.1259C14.6089 8.60703 11.7966 11.5137 10.8343 12.0693Z" fill="currentColor"/><path d="M16.585 10.25C16.585 6.6132 13.6368 3.66504 10 3.66504C6.3632 3.66504 3.41504 6.6132 3.41504 10.25C3.41504 12.4001 4.44494 14.31 6.04102 15.5127L6.36719 15.7432L6.47168 15.8291C6.68974 16.0482 6.73203 16.3973 6.55469 16.665C6.3772 16.9328 6.03875 17.0306 5.75195 16.915L5.63281 16.8516L5.24023 16.5752C3.32482 15.1316 2.08496 12.8355 2.08496 10.25C2.08496 5.87867 5.62867 2.33496 10 2.33496C14.3713 2.33496 17.915 5.87867 17.915 10.25C17.915 13.0079 16.5037 15.4356 14.3672 16.8516L14.248 16.915C13.9612 17.0306 13.6228 16.9328 13.4453 16.665C13.2425 16.3589 13.3267 15.946 13.6328 15.7432L13.959 15.5127C15.5551 14.31 16.585 12.4001 16.585 10.25Z" fill="currentColor"/>';
   const label = document.createElement("span");
   label.className = "label";
   label.textContent = "—";
