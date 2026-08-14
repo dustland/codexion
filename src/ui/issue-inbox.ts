@@ -30,7 +30,10 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
 
   const host = document.createElement("span");
   host.id = hostId;
-  host.style.display = "contents";
+  host.style.alignItems = "center";
+  host.style.display = "inline-flex";
+  host.style.flex = "0 0 auto";
+  host.style.height = "28px";
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = \`
     <style>

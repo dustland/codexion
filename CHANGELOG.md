@@ -6,6 +6,15 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.7 - 2026-08-15
+
+### Fixed
+
+- Give the GitHub Issue trigger a real 28px flex footprint so it cannot overlap adjacent title-bar
+  controls when the side panel changes the available layout.
+- Anchor the quota hovercard below the quota's right edge so it expands left and remains fully
+  visible with either side-panel state.
+
 ## 0.2.6 - 2026-08-14
 
 ### Fixed

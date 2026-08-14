@@ -105,9 +105,14 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       const resetAt = latestSnapshot?.resetAt ? new Date(latestSnapshot.resetAt) : null;
       tooltip.querySelector(".reset").textContent = resetAt && Number.isFinite(resetAt.getTime()) ? new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(resetAt) : "Unavailable";
       const rect = meter.getBoundingClientRect();
-      tooltip.style.left = Math.max(8, Math.min(innerWidth - 256, rect.left)) + "px";
-      tooltip.style.top = Math.min(innerHeight - 20, rect.bottom + 7) + "px";
+      document.body.append(tooltipHost);
       tooltip.dataset.open = "true";
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const left = Math.max(8, Math.min(innerWidth - tooltipRect.width - 8, rect.right - tooltipRect.width));
+      const below = rect.bottom + 7;
+      const top = below + tooltipRect.height <= innerHeight - 8 ? below : Math.max(8, rect.top - tooltipRect.height - 7);
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
     }, 80);
   };
   const containsPoint = (rect, x, y) => x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
