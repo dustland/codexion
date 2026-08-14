@@ -34,6 +34,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
   host.style.display = "inline-flex";
   host.style.flex = "0 0 auto";
   host.style.height = "28px";
+  host.style.pointerEvents = "auto";
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = \`
     <style>

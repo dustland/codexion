@@ -12,6 +12,8 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 - Anchor quota and GitHub Issues before the native Open in control so all three participate in the
   same dynamically sized title-bar action group when the side panel opens or closes.
+- Keep the GitHub Issues trigger interactive inside the title bar's pointer-transparent layout
+  container so its tooltip and menu continue to work with the side panel visible.
 
 ## 0.2.7 - 2026-08-15
 
