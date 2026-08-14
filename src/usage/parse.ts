@@ -37,6 +37,7 @@ export function parseWeeklyUsage(payload: unknown): UsageSnapshot | null {
   }
 
   return {
+    account: null,
     usedPercent: weekly.usedPercent,
     remainingPercent: weekly.remainingPercent,
     resetAt: weekly.resetAt,

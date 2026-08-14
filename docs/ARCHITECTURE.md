@@ -8,9 +8,9 @@ application or modifying its bundle, binaries, or signed resources.
 The system has two independent paths:
 
 ```text
-Codex app-server ── account/rateLimits/read ──> UsageSnapshot
-                                                    │
-Codex renderer <──────── loopback CDP <───────── UI renderer
+Codex app-server ── account/rateLimits/read + account/read ──> UsageSnapshot
+                                                                  │
+Codex renderer <──────────────── loopback CDP <────────────── UI renderer
 ```
 
 App-server provides data. CDP provides a rendering channel. An extension should not scrape data
@@ -49,8 +49,9 @@ Responsibilities:
 
 - Start the Codex-bundled app-server as a child process.
 - Initialize the local JSON-RPC session.
-- Call the read-only `account/rateLimits/read` method.
+- Call the read-only `account/rateLimits/read` and `account/read` methods.
 - Convert protocol responses into a stable `UsageSnapshot`.
+- Retain only account type, plan type, and email; discard unrelated response fields.
 - Tolerate known field variants without mistaking hourly or monthly limits for weekly usage.
 
 Non-responsibilities: CDP, DOM access, and credential persistence.
@@ -60,10 +61,11 @@ Non-responsibilities: CDP, DOM access, and credential persistence.
 Responsibilities:
 
 - Install uniquely identified extension nodes.
-- Place Sanity Meter in the native right title-bar action group.
+- Integrate Sanity Meter into the existing profile trigger in the sidebar footer.
 - Restore placement after renderer updates.
-- Render `Weekly n%` or the honest unavailable state `Weekly —`.
-- Hide secondary status in narrow windows to preserve primary controls.
+- Render the remaining weekly percentage and a full-width progress track.
+- Preserve the native profile trigger behavior and restore modified inline styles on cleanup.
+- Render an honest unavailable state instead of estimating usage.
 
 Non-responsibilities: account requests and process lifecycle decisions.
 
@@ -89,6 +91,7 @@ merely looks like CDP.
 - CDP has no authentication and must bind only to `127.0.0.1`.
 - Other processes running as the same local user remain part of the threat model.
 - Tokens, cookies, and app-server authentication material must never be printed, stored, or sent.
+- Account identity parsing is allowlisted to type, plan type, and email.
 - Codexion does not modify `app.asar`, application binaries, signed files, or Codex settings.
 - A failed normal lifecycle must not fall back to `kill -9`.
 - Renderer DOM and app-server responses are mutable, untrusted inputs.

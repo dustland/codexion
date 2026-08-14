@@ -10,7 +10,7 @@ export { diagnoseCodex, startCodexWithCdp } from "./lifecycle/codex-app.js";
 export { formatWeeklyMeter } from "./ui/title-meter.js";
 export { createAppServerUsageProvider } from "./usage/app-server-provider.js";
 export { parseWeeklyUsage } from "./usage/parse.js";
-export type { UsageProvider, UsageSnapshot } from "./usage/types.js";
+export type { AccountIdentity, UsageProvider, UsageSnapshot } from "./usage/types.js";
 export { attachToCodex };
 
 export const codexion = {

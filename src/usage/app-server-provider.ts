@@ -2,6 +2,7 @@ import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
+import { parseAccountIdentity } from "./account.js";
 import { parseWeeklyUsage } from "./parse.js";
 import type { UsageProvider, UsageSnapshot } from "./types.js";
 
@@ -62,7 +63,17 @@ class AppServerClient implements AppServerUsageProvider {
 
   async getSnapshot(): Promise<UsageSnapshot | null> {
     const response = await this.request("account/rateLimits/read", null);
-    return parseWeeklyUsage(response);
+    const snapshot = parseWeeklyUsage(response);
+    if (snapshot === null) return null;
+
+    try {
+      const account = parseAccountIdentity(
+        await this.request("account/read", { refreshToken: false }),
+      );
+      return { ...snapshot, account };
+    } catch {
+      return snapshot;
+    }
   }
 
   close(): void {

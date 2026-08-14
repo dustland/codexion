@@ -11,8 +11,9 @@ Codexion is a lightweight local companion for Codex Desktop. It safely launches 
 desktop app and uses the loopback Chrome DevTools Protocol (CDP) to provide small, restrained UI
 enhancements without modifying the installed application.
 
-The first extension is **Sanity Meter**, a native-looking weekly usage indicator in the right side
-of the Codex title bar, such as `Weekly 8%`.
+The first extension is **Sanity Meter**. It augments the existing profile trigger in the Codex
+sidebar footer with the remaining weekly percentage and a full-width progress track. For example,
+`82%` means 82% of the weekly allowance remains. The native profile menu behavior is preserved.
 
 > Codexion is not a Codex plugin. CDP must be enabled when the desktop process starts, while plugin
 > session hooks run after that process already exists. A standalone companion can coordinate and
@@ -24,7 +25,7 @@ of the Codex title bar, such as `Weekly 8%`.
 - Runtime: Node.js 22 or later
 - Default app: `/Applications/ChatGPT.app`
 - Default CDP endpoint: `127.0.0.1:9341`
-- Usage source: the read-only Codex app-server method `account/rateLimits/read`
+- Data sources: the read-only Codex app-server methods `account/rateLimits/read` and `account/read`
 - Refresh interval: 60 seconds
 
 Codexion does not modify `app.asar`, application binaries, or signed resources. It does not create
@@ -72,8 +73,8 @@ pnpm start -- \
 5. Launch the trusted Codex executable with CDP bound only to `127.0.0.1`.
 6. Wait for the endpoint and verify that the newly launched PID owns it.
 7. Select the main renderer instead of auxiliary views such as the avatar overlay.
-8. Read a normalized weekly snapshot from the Codex app-server.
-9. Update the title-bar Widget every minute.
+8. Read a normalized weekly snapshot and non-secret account identity from the Codex app-server.
+9. Update the profile trigger percentage and progress fill every minute.
 
 Usage retrieval and UI injection are intentionally separate: app-server provides data, while CDP
 only renders the extension. This avoids coupling data access to unstable renderer HTTP routes.
@@ -112,8 +113,8 @@ curl http://127.0.0.1:9341/json/version
 
 | Symptom | Cause and recovery |
 | --- | --- |
-| The Widget is missing | Run `pnpm doctor`; confirm CDP is ready and the main renderer is present |
-| The Widget shows `Weekly —` | Usage is unavailable or unrecognized; Codexion never estimates it from local task counts |
+| The profile percentage is missing | Run `pnpm doctor`; confirm CDP is ready and the main renderer is present |
+| The profile percentage shows `—` | Usage is unavailable or unrecognized; Codexion never estimates it from local task counts |
 | The port is occupied | Select another `CODEXION_CDP_PORT` or stop the unrelated local process |
 | Multiple main processes are detected | Quit all Codex Desktop instances normally, then start again |
 | Codex does not quit normally | Codexion stops; it does not force-terminate or launch a second instance |
@@ -156,7 +157,7 @@ background example, resource handling, locator rules, and a security checklist.
 
 - [x] Verified one-click macOS CDP lifecycle
 - [x] Codex app-server weekly usage provider
-- [x] Native-style Sanity Meter in the title bar
+- [x] Native-style Sanity Meter beside the current account
 - [x] `doctor` diagnostics
 - [ ] Installable macOS companion application
 - [ ] Extension registry and unified enable/disable behavior

@@ -10,8 +10,9 @@
 Codexion 是一个轻量的 Codex Desktop 本地 Companion。它负责安全地启动或接管
 Codex Desktop，并通过本机 Chrome DevTools Protocol（CDP）添加小型、克制的界面增强。
 
-目前的第一个功能是 **Sanity Meter**：在 Codex 标题栏右侧显示真实的周用量，例如
-`Weekly 8%`。它和原生标题栏控件排列在一起，不遮挡内容，也不会伪装成可点击按钮。
+目前的第一个功能是 **Sanity Meter**：它直接增强 Codex 侧边栏底部现有的账户按钮，在右侧
+显示周额度剩余百分比，并以整个按钮为 100% 进度轨道。例如 `82%` 表示本周额度还剩
+82%。Codex 原有的账户菜单行为保持不变。
 
 > Codexion 不是 Codex Plugin。CDP 必须在 Codex Desktop 进程启动时开启，而 Plugin
 > 的会话钩子运行得太晚，无法可靠地为当前进程补上启动参数。因此 Codexion 采用独立
@@ -23,7 +24,7 @@ Codex Desktop，并通过本机 Chrome DevTools Protocol（CDP）添加小型、
 - 运行时：Node.js 22 或更高版本
 - Codex Desktop 默认位置：`/Applications/ChatGPT.app`
 - CDP 默认地址：`127.0.0.1:9341`
-- 用量数据源：Codex 自带 app-server 的只读方法 `account/rateLimits/read`
+- 数据源：Codex app-server 的只读方法 `account/rateLimits/read` 和 `account/read`
 - UI 更新频率：每 60 秒
 
 Codexion 不修改 `app.asar`、应用二进制文件或签名资源，不创建第二份浏览器配置，
@@ -72,8 +73,8 @@ pnpm start -- \
 5. 直接启动受信任的 Codex 可执行文件，并只将 CDP 绑定到 `127.0.0.1`。
 6. 等待端口就绪，再次确认监听者就是新启动的 Codex 进程。
 7. 连接主 renderer，而不是头像浮层等辅助 renderer。
-8. 通过 Codex app-server 获取标准化的周用量快照。
-9. 将快照传给标题栏 Widget，并每分钟刷新。
+8. 通过 Codex app-server 获取标准化的周用量快照和非敏感账户身份。
+9. 每分钟更新账户按钮中的剩余百分比和进度填充。
 
 数据读取与 UI 注入相互独立：app-server 负责用量，CDP 只负责显示。这避免了依赖
 renderer 内部、容易变化的私有 HTTP URL。
@@ -114,8 +115,8 @@ curl http://127.0.0.1:9341/json/version
 
 | 现象 | 原因与处理 |
 | --- | --- |
-| Widget 没出现 | 运行 `pnpm doctor`，确认 CDP 已开启且目标是主 renderer |
-| 显示 `Weekly —` | 用量接口暂不可用或响应无法识别；查看日志，不会用本地任务数量估算 |
+| 账户按钮中没有百分比 | 运行 `pnpm doctor`，确认 CDP 已开启且目标是主 renderer |
+| 账户按钮显示 `—` | 用量接口暂不可用或响应无法识别；查看日志，不会用本地任务数量估算 |
 | 端口已占用 | 更换 `CODEXION_CDP_PORT`，或关闭占用该端口的本地进程 |
 | 检测到多个 Codex 主进程 | 正常退出所有 Codex Desktop 窗口后重新运行 |
 | Codex 无法正常退出 | Codexion 会停止操作，不会强杀或再启动第二个实例 |
@@ -158,7 +159,7 @@ extension 构建，而不是继续扩张 Sanity Meter 或生命周期模块。
 
 - [x] 安全的一键 CDP 生命周期
 - [x] app-server 周用量 provider
-- [x] 原生标题栏风格的 Sanity Meter
+- [x] 当前账户旁的原生风格 Sanity Meter
 - [x] `doctor` 诊断命令
 - [ ] 可安装的稳定 macOS Companion `.app`
 - [ ] extension registry 和统一启用/禁用机制

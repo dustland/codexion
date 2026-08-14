@@ -10,8 +10,8 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 - Safe macOS lifecycle coordinator for launching Codex Desktop with loopback CDP.
 - `start`, `attach`, and `doctor` CLI commands.
-- Codex app-server provider using `account/rateLimits/read`.
-- Native-style weekly usage Widget in the right title-bar action group.
+- Codex app-server provider using `account/rateLimits/read` and `account/read`.
+- Native-style weekly usage enhancement integrated into the sidebar profile trigger.
 - Contributor, security, extension, and architecture documentation.
 
 ### Changed
@@ -20,7 +20,9 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 - Separated usage data retrieval from CDP UI injection.
 - Reconnect to the main renderer after CDP session loss and reinstall the Widget automatically.
 - Restart the owned app-server usage provider after failures and prevent stderr backpressure.
-- Show the last successful refresh time in the Widget tooltip.
+- Show the remaining weekly percentage over a full-width progress track while preserving the
+  native profile menu behavior.
+- Read the current non-secret account identity without retaining authentication material.
 
 ### Removed
 
