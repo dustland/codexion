@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.8 - 2026-08-15
+
+### Fixed
+
+- Anchor quota and GitHub Issues before the native Open in control so all three participate in the
+  same dynamically sized title-bar action group when the side panel opens or closes.
+
 ## 0.2.7 - 2026-08-15
 
 ### Fixed

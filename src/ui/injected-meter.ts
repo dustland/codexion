@@ -129,6 +129,25 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   document.body.append(tooltipHost);
 
   const place = () => {
+    const openInButton = Array.from(document.querySelectorAll('button[aria-label="Open in"]')).find((button) => {
+      const rect = button.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.x > window.innerWidth / 2;
+    });
+    let openInControl = openInButton;
+    while (openInControl?.parentElement && !openInControl.parentElement.classList?.contains("ms-auto")) {
+      openInControl = openInControl.parentElement;
+    }
+    const openInGroup = openInControl?.parentElement?.classList?.contains("ms-auto")
+      ? openInControl.parentElement
+      : null;
+    const issueHost = document.getElementById("codexion-issue-inbox-host");
+    if (openInGroup && openInControl) {
+      const reference = issueHost?.parentElement === openInGroup ? issueHost : openInControl;
+      if (host.parentElement !== openInGroup || (reference !== host && host.nextSibling !== reference)) {
+        openInGroup.insertBefore(host, reference);
+      }
+      return;
+    }
     const labels = ["Toggle pinned summary", "Toggle bottom panel", "Toggle side panel"];
     const candidates = labels.flatMap((label) => Array.from(document.querySelectorAll('button[aria-label="' + label + '"]')));
     const anchor = candidates.find((button) => {
@@ -147,7 +166,6 @@ export const INSTALL_METER_EXPRESSION = `(() => {
         break;
       }
     }
-    const issueHost = document.getElementById("codexion-issue-inbox-host");
     const reference = issueHost?.parentElement === group ? issueHost : group.firstChild;
     if (host.parentElement === group && (reference === host || host.nextSibling === issueHost)) return;
     group.insertBefore(host, reference);
