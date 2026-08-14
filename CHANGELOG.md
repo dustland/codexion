@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.5 - 2026-08-14
+
+### Fixed
+
+- Bind the rich quota tooltip to the full quota trigger hit area so it appears reliably in the
+  native title bar, and reduce its hover delay.
+
 ## 0.2.4 - 2026-08-14
 
 ### Added

@@ -103,10 +103,10 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       tooltip.style.left = Math.max(8, Math.min(innerWidth - 256, rect.left)) + "px";
       tooltip.style.top = Math.min(innerHeight - 20, rect.bottom + 7) + "px";
       tooltip.dataset.open = "true";
-    }, 350);
+    }, 180);
   };
-  meter.addEventListener("mouseenter", showTooltip);
-  meter.addEventListener("mouseleave", scheduleTooltipHide);
+  host.addEventListener("pointerenter", showTooltip);
+  host.addEventListener("pointerleave", scheduleTooltipHide);
   tooltip.addEventListener("mouseenter",()=>clearTimeout(tooltipHideTimer));
   tooltip.addEventListener("mouseleave",scheduleTooltipHide);
   document.body.append(tooltipHost);
