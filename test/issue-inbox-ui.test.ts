@@ -25,6 +25,7 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("View on GitHub");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="header-title"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("<span>Issues</span>");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('<circle cx="8" cy="8" r="6.25"/>');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("--color-token-text-tertiary");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Current repo");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Older issues");
