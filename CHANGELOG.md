@@ -10,8 +10,8 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ### Fixed
 
-- Place the quota meter and GitHub Issue Inbox before every native control group in the complete
-  right-side title-bar action rail, rather than only before controls in their nearest subgroup.
+- Place only the quota meter before every native control group in the complete right-side title-bar
+  action rail, while keeping the GitHub Issue Inbox in its original control group.
 
 ## 0.2.3 - 2026-08-14
 
