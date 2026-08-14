@@ -18,6 +18,9 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 - Repositioned Codexion from a Codex Plugin to an independent local Companion.
 - Separated usage data retrieval from CDP UI injection.
+- Reconnect to the main renderer after CDP session loss and reinstall the Widget automatically.
+- Restart the owned app-server usage provider after failures and prevent stderr backpressure.
+- Show the last successful refresh time in the Widget tooltip.
 
 ### Removed
 

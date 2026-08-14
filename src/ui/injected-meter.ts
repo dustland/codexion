@@ -86,7 +86,11 @@ export const INSTALL_METER_EXPRESSION = `(() => {
     label.textContent = \`Weekly \${used}%\`;
     meter.dataset.level = used >= 85 ? "high" : used >= 60 ? "medium" : "low";
     const reset = snapshot.resetAt ? new Date(snapshot.resetAt) : null;
-    meter.title = reset && !Number.isNaN(reset.getTime()) ? \`Resets \${reset.toLocaleString()}\` : "";
+    const updated = snapshot.observedAt ? new Date(snapshot.observedAt) : null;
+    const details = [];
+    if (reset && !Number.isNaN(reset.getTime())) details.push(\`Resets \${reset.toLocaleString()}\`);
+    if (updated && !Number.isNaN(updated.getTime())) details.push(\`Updated \${updated.toLocaleTimeString()}\`);
+    meter.title = details.join(" · ");
   };
   return true;
 })()`;

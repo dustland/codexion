@@ -1,6 +1,7 @@
-import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
+import type { Readable, Writable } from "node:stream";
 import { parseWeeklyUsage } from "./parse.js";
 import type { UsageProvider, UsageSnapshot } from "./types.js";
 
@@ -16,6 +17,8 @@ interface PendingRequest {
   timer: NodeJS.Timeout;
 }
 
+type AppServerProcess = ChildProcessByStdio<Writable, Readable, null>;
+
 export interface AppServerUsageProvider extends UsageProvider {
   close(): void;
 }
@@ -26,7 +29,7 @@ export async function createAppServerUsageProvider(
   const executable = join(appPath, "Contents", "Resources", "codex");
   const child = spawn(executable, ["app-server", "--listen", "stdio://"], {
     shell: false,
-    stdio: ["pipe", "pipe", "pipe"],
+    stdio: ["pipe", "pipe", "ignore"],
   });
   const client = new AppServerClient(child);
   try {
@@ -43,7 +46,7 @@ class AppServerClient implements AppServerUsageProvider {
   private nextId = 1;
   private readonly pending = new Map<number, PendingRequest>();
 
-  constructor(private readonly child: ChildProcessWithoutNullStreams) {
+  constructor(private readonly child: AppServerProcess) {
     const lines = createInterface({ input: child.stdout });
     lines.on("line", (line) => this.receive(line));
     child.once("error", (error) => this.failAll(error));
