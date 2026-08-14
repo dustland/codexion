@@ -30,6 +30,8 @@ Responsibilities:
 - Resolve the Codex Desktop bundle and main executable.
 - Identify a unique main process.
 - Request a normal quit and wait for that process identity to disappear.
+- Force-terminate only that verified process after a bounded grace period when macOS reports that
+  it accepted the quit request but the process remains alive.
 - Launch with `--remote-debugging-address=127.0.0.1` and the configured port.
 - Verify that the CDP listener belongs to the expected PID.
 - Provide read-only diagnostics.
@@ -79,10 +81,9 @@ repositories outside the selected local workspace.
 Responsibilities:
 
 - Install uniquely identified extension nodes.
-- Integrate Sanity Meter into the existing profile trigger in the sidebar footer.
+- Integrate Sanity Meter and Issue Inbox into the native Open in title-bar action container.
 - Restore placement after renderer updates.
-- Render the remaining weekly percentage and a full-width progress track.
-- Preserve the native profile trigger behavior and restore modified inline styles on cleanup.
+- Preserve native spacing, non-draggable hit regions, hover behavior, and cleanup semantics.
 - Render an honest unavailable state instead of estimating usage.
 - Render the title-bar Issue Inbox and the Codexion page under Settings > Integrations.
 
@@ -98,8 +99,9 @@ CLI start
   ├─ lifecycle: verify PID owns port
   ├─ usage: initialize app-server provider
   ├─ cdp: select main renderer
-  ├─ ui: install Widget
-  └─ refresh loop: UsageSnapshot -> Widget
+  ├─ ui: install quota and Issue Inbox
+  ├─ refresh loops: snapshots -> extensions
+  └─ health loop: detect renderer replacement -> restore CDP and extension state
 ```
 
 If ownership verification fails, Codexion stops instead of connecting to an unknown listener that
@@ -114,7 +116,8 @@ merely looks like CDP.
 - Handle prompts prohibit posting or closing an issue without explicit approval.
 - Account identity parsing is allowlisted to type, plan type, and email.
 - Codexion does not modify `app.asar`, application binaries, signed files, or Codex settings.
-- A failed normal lifecycle must not fall back to `kill -9`.
+- A failed normal quit may fall back only to macOS `forceTerminate` for the already verified Codex
+  PID; Codexion never uses a broad process match or launches a competing second instance.
 - Renderer DOM and app-server responses are mutable, untrusted inputs.
 - Every injected node needs a unique Codexion identity for idempotent updates and complete removal.
 
@@ -122,10 +125,10 @@ merely looks like CDP.
 
 | Layer | Failure behavior |
 | --- | --- |
-| Lifecycle | Stop; do not force-terminate or launch a second instance |
+| Lifecycle | Prefer normal quit; after a bounded grace period force-restart only the verified Codex PID |
 | Port ownership | Reject the connection and report a conflict |
 | App-server | Show unavailable state and log the error; never estimate usage |
-| Renderer discovery | Time out instead of injecting an auxiliary or unknown page |
+| Renderer discovery | Time out instead of injecting an auxiliary or unknown page; retry when a replacement Codex process appears |
 | DOM anchor | Hide the extension and wait for the expected anchor to return |
 | UI refresh | Preserve the latest snapshot and log the refresh failure |
 

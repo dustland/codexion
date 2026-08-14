@@ -18,10 +18,12 @@ import type { UsageProvider, UsageSnapshot } from "./usage/types.js";
 const USAGE_POLL_INTERVAL_MS = 60_000;
 const ISSUE_POLL_INTERVAL_MS = 3 * 60_000;
 const ACTION_POLL_INTERVAL_MS = 750;
+const RENDERER_HEALTH_INTERVAL_MS = 2_000;
 
 interface AttachOptions {
   appPath?: string;
   log?: (message: string) => void;
+  recoverRenderer?: () => Promise<boolean>;
   timeoutMs?: number;
   usageProvider?: UsageProvider;
 }
@@ -54,6 +56,7 @@ export async function attachToCodex(
   let targetUrl = "";
   const issueInbox = new GithubIssueInboxService();
   let actionRunning = false;
+  let rendererRecoveryRunning = false;
 
   const connectRenderer = async (): Promise<CdpSession> => {
     session?.close();
@@ -96,7 +99,7 @@ export async function attachToCodex(
     const actions = await session.evaluate<IssueInboxAction[]>(DRAIN_ISSUE_ACTIONS_EXPRESSION);
     if (!Array.isArray(actions) || actions.length === 0) return;
     actionRunning = true;
-    let repositoriesChanged = false;
+    let settingsChanged = false;
     try {
       for (const action of actions) {
         if (action.type === "load-settings") await updateIssueInbox(true);
@@ -124,14 +127,14 @@ export async function attachToCodex(
         }
         if (action.type === "set-repositories" && action.repositories !== undefined) {
           await issueInbox.setSelectedRepositories(action.repositories);
-          repositoriesChanged = true;
+          settingsChanged = true;
         }
         if (action.type === "set-max-age" && action.maxAgeDays !== undefined) {
           await issueInbox.setMaxAgeDays(action.maxAgeDays);
-          repositoriesChanged = true;
+          settingsChanged = true;
         }
       }
-      if (repositoriesChanged) await updateIssueInbox(false);
+      if (settingsChanged) await updateIssueInbox(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log(`Issue Inbox action failed: ${message}`);
@@ -178,6 +181,35 @@ export async function attachToCodex(
     return latestSnapshot;
   };
 
+  const recoverRenderer = async (): Promise<void> => {
+    if (closed || rendererRecoveryRunning) return;
+    rendererRecoveryRunning = true;
+    try {
+      if (session !== null) {
+        try {
+          await session.evaluate("true");
+          return;
+        } catch {
+          session.close();
+          session = null;
+          log("Codex renderer disconnected; waiting for its replacement");
+        }
+      }
+      if (options.recoverRenderer && !(await options.recoverRenderer())) return;
+      const connected = await connectRenderer();
+      if (latestSnapshot !== null) {
+        await connected.evaluate(createMeterUpdateExpression(latestSnapshot));
+      }
+      const issueSnapshot = await issueInbox.snapshot(false);
+      await connected.evaluate(createIssueInboxUpdateExpression(issueSnapshot, false));
+      log("Codexion features restored after Codex restarted");
+    } catch (error) {
+      log(`Renderer recovery pending: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      rendererRecoveryRunning = false;
+    }
+  };
+
   await connectRenderer();
   const actionTimer = setInterval(() => {
     void handleIssueActions().catch((error: unknown) => {
@@ -202,6 +234,9 @@ export async function attachToCodex(
       log(`Issue Inbox refresh failed: ${error instanceof Error ? error.message : String(error)}`);
     });
   }, ISSUE_POLL_INTERVAL_MS);
+  const rendererHealthTimer = setInterval(() => {
+    void recoverRenderer();
+  }, RENDERER_HEALTH_INTERVAL_MS);
   return {
     close: () => {
       if (closed) {
@@ -211,6 +246,7 @@ export async function attachToCodex(
       clearInterval(timer);
       clearInterval(issueTimer);
       clearInterval(actionTimer);
+      clearInterval(rendererHealthTimer);
       session?.close();
       session = null;
       ownedProvider?.close();

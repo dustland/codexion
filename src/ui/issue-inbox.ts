@@ -30,20 +30,22 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
 
   const host = document.createElement("span");
   host.id = hostId;
+  host.className = "no-drag";
   host.style.alignItems = "center";
   host.style.display = "inline-flex";
   host.style.flex = "0 0 auto";
   host.style.height = "28px";
   host.style.pointerEvents = "auto";
+  host.style.setProperty("-webkit-app-region", "no-drag");
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = \`
     <style>
       :host { color: inherit; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       button, input { font: inherit; }
-      .trigger { align-items:center; background:transparent; border:0; border-radius:6px; color:var(--color-token-text-tertiary,rgba(0,0,0,.5)); cursor:pointer; display:flex; height:28px; justify-content:center; min-width:28px; padding:0 6px; position:relative; }
+      .trigger { -webkit-app-region:no-drag; align-items:center; background:transparent; border:0; border-radius:6px; color:var(--color-token-text-tertiary,rgba(0,0,0,.5)); cursor:pointer; display:flex; height:28px; justify-content:center; min-width:28px; padding:0 6px; pointer-events:auto; position:relative; }
       .trigger:hover, .trigger[aria-expanded="true"] { background:color-mix(in oklab,currentColor 8%,transparent); }
       .trigger svg { height:15px; width:15px; }
-      .badge { align-items:center; background:var(--color-token-text-secondary,#666); border:1.5px solid var(--color-token-bg-primary,#fff); border-radius:8px; box-sizing:border-box; color:var(--color-token-bg-primary,#fff); display:none; font-size:9px; font-weight:650; height:14px; justify-content:center; min-width:14px; padding:0 2px; position:absolute; right:-2px; top:-5px; }
+      .badge { align-items:center; background:var(--color-token-text-secondary,#666); border:1.5px solid var(--color-token-bg-primary,#fff); border-radius:8px; box-sizing:border-box; color:var(--color-token-bg-primary,#fff); display:none; font-size:9px; font-weight:650; height:14px; justify-content:center; min-width:14px; padding:0 2px; position:absolute; right:-2px; top:-3px; }
       .badge[data-visible="true"] { display:flex; }
       .trigger-tooltip { background:var(--color-token-text-primary,#202020); border-radius:7px; color:var(--color-token-bg-primary,#fff); display:none; font-size:11px; line-height:16px; padding:5px 8px; pointer-events:none; position:fixed; white-space:nowrap; z-index:2147483647; }
       .trigger-tooltip[data-open="true"] { display:block; }
@@ -220,12 +222,29 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
   let nativeOriginal = null;
   let nativeSelection = null;
   let nativePreviousButton = null;
+  const setNativeButtonSelected = (button, selected) => {
+    button.classList.toggle("bg-primary-ghost-hover",selected);
+    button.classList.toggle("hover:bg-primary-ghost-hover",!selected);
+    button.classList.remove("bg-token-list-hover-background");
+    if(selected)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");
+    const content=button.querySelector(".flex-1");content?.classList.toggle("text-emphasis",selected);content?.classList.toggle("text-default",!selected);
+    const icon=button.querySelector("svg");icon?.classList.toggle("text-codex-icon-active",selected);
+  };
+  const syncNativeSelection = () => {
+    if(!nativePage)return;
+    const currentButton=document.getElementById("codexion-settings-nav");
+    if(currentButton)nativeButton=currentButton;
+    for(const button of document.querySelectorAll('nav[aria-label="Settings"] button')){
+      const selected=button.id==="codexion-settings-nav";
+      setNativeButtonSelected(button,selected);
+    }
+  };
   const closeNativePage = (restorePrevious=true) => {
     if(nativeOriginal) nativeOriginal.style.display="";
     nativePage?.remove(); nativePage=null;
     nativeSelection=null;
-    if(nativeButton){nativeButton.removeAttribute("aria-current");nativeButton.classList.remove("bg-token-list-hover-background");}
-    if(restorePrevious&&nativePreviousButton?.isConnected){nativePreviousButton.setAttribute("aria-current","page");nativePreviousButton.classList.add("bg-token-list-hover-background");}
+    if(nativeButton)setNativeButtonSelected(nativeButton,false);
+    if(restorePrevious&&nativePreviousButton?.isConnected)setNativeButtonSelected(nativePreviousButton,true);
     nativePreviousButton=null;
   };
   const handleSettingsNavigation = (event) => {
@@ -297,7 +316,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     }
   };
   const openNativePage = () => {
-    if(nativePage){renderNativeSettings();return;}
+    if(nativePage){syncNativeSelection();renderNativeSettings();return;}
     const left=document.querySelector(".app-shell-left-panel"); const main=left?.nextElementSibling;
     if(!main) { backdrop.dataset.open="true"; if(!settingsSnapshot)queue({type:"load-settings"}); return; }
     nativeOriginal=main.firstElementChild; if(nativeOriginal) nativeOriginal.style.display="none";
@@ -310,7 +329,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
       #codexion-settings-page .cx-card{background:var(--color-background-panel,var(--color-token-bg-fog));border:1px solid var(--color-token-border);border-radius:16px;overflow:hidden}
       #codexion-settings-page .cx-option{align-items:center;background:var(--color-background-panel,var(--color-token-bg-fog));border:1px solid var(--color-token-border);border-radius:12px;box-sizing:border-box;display:flex;gap:24px;justify-content:space-between;margin:0 0 24px;min-height:64px;padding:12px 16px} #codexion-settings-page .cx-option-copy{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0} #codexion-settings-page .cx-option-title{font-size:13px;font-weight:600;line-height:18px} #codexion-settings-page .cx-option-description{color:var(--color-token-text-secondary);font-size:11px;line-height:16px}
       #codexion-settings-page .cx-filter-wrap{border-bottom:1px solid var(--color-token-border);padding:10px} #codexion-settings-page .cx-filter-control{position:relative} #codexion-settings-page .cx-filter-control svg{color:var(--color-token-text-tertiary);height:14px;left:11px;pointer-events:none;position:absolute;top:11px;width:14px} #codexion-settings-page .cx-filter{background:var(--color-token-bg-primary);border:1px solid var(--color-token-border);border-radius:8px;box-sizing:border-box;color:inherit;font-size:13px;height:36px;outline:none;padding:0 11px 0 34px;width:100%} #codexion-settings-page .cx-filter:focus{border-color:color-mix(in srgb,currentColor 45%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,currentColor 16%,transparent)} #codexion-settings-page .cx-select{flex:none;position:relative;width:148px} #codexion-settings-page button.cx-age{align-items:center;background:var(--color-token-bg-primary);border:1px solid var(--color-token-border);border-radius:8px;box-sizing:border-box;color:inherit;display:flex;font-size:13px;font-weight:400;height:34px;justify-content:space-between;padding:0 10px 0 12px;width:100%} #codexion-settings-page button.cx-age:focus-visible{border-color:color-mix(in srgb,currentColor 45%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,currentColor 16%,transparent);outline:none} #codexion-settings-page .cx-age svg{color:var(--color-token-text-tertiary);height:14px;transition:transform 100ms ease-out;width:14px} #codexion-settings-page .cx-age[aria-expanded="true"] svg{transform:rotate(180deg)}
-      #codexion-settings-page .cx-age-menu{background:var(--color-background-panel,var(--color-token-bg-primary));border:1px solid var(--color-token-border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none;left:0;padding:4px;position:absolute;top:38px;width:100%;z-index:10} #codexion-settings-page .cx-age-menu[data-open="true"]{display:block} #codexion-settings-page button.cx-age-option{align-items:center;background:transparent;border:0;border-radius:5px;color:inherit;display:flex;font-size:13px;font-weight:400;height:30px;padding:0 8px;text-align:left;width:100%} #codexion-settings-page button.cx-age-option:hover,#codexion-settings-page button.cx-age-option:focus-visible{background:var(--color-token-list-hover-background);outline:none} #codexion-settings-page button.cx-age-option[aria-selected="true"]{background:color-mix(in srgb,currentColor 9%,transparent);font-weight:550}
+      #codexion-settings-page .cx-age-menu{background:var(--color-background-panel,var(--color-token-bg-primary));border:1px solid var(--color-token-border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none;left:0;padding:4px;position:absolute;top:38px;width:100%;z-index:10} #codexion-settings-page .cx-age-menu[data-open="true"]{display:block} #codexion-settings-page button.cx-age-option{align-items:center;background:transparent;border:0;border-radius:5px;color:inherit;display:flex;font-size:13px;font-weight:400;height:30px;justify-content:space-between;padding:0 8px;text-align:left;width:100%} #codexion-settings-page button.cx-age-option:hover,#codexion-settings-page button.cx-age-option:focus-visible{background:var(--color-token-list-hover-background);outline:none} #codexion-settings-page .cx-age-option .cx-check{height:14px;margin-left:8px;visibility:hidden;width:14px} #codexion-settings-page .cx-age-option[aria-selected="true"] .cx-check{visibility:visible}
       #codexion-settings-page .cx-status{border-bottom:1px solid var(--color-token-border);font-size:13px;padding:14px 16px}
       #codexion-settings-page .cx-repos{max-height:420px;overflow:auto} #codexion-settings-page .cx-repo{align-items:center;cursor:pointer;display:grid;gap:10px;grid-template-columns:18px minmax(160px,1fr) minmax(160px,1fr);min-height:44px;padding:0 16px}
       #codexion-settings-page .cx-repo:not(:last-child){border-bottom:1px solid var(--color-token-border)} #codexion-settings-page .cx-repo:hover{background:var(--color-token-list-hover-background)}
@@ -321,6 +340,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
       #codexion-settings-page button.cx-secondary{background:transparent;border:1px solid var(--color-token-border);color:inherit;height:28px} #codexion-settings-page .cx-ignored-empty{color:var(--color-token-text-secondary);font-size:13px;padding:18px 16px}
       #codexion-settings-page .cx-version{color:var(--color-token-text-tertiary);font-size:11px;margin-top:32px;text-align:center}
     </style><div class="cx-wrap"><h1>Codexion</h1><div class="cx-section-head"><h2>GitHub Issue Inbox</h2><span class="cx-account" data-codexion-account hidden></span></div><p>Select the repositories Codexion should poll. Issues you authored or already replied to are excluded. Handling an issue starts one idempotent Codex task in the matching local workspace.</p><div class="cx-option"><div class="cx-option-copy"><span class="cx-option-title">Issue window</span><span class="cx-option-description">Controls the recent issues shown in the Inbox and its badge.</span></div><div class="cx-select"><button class="cx-age" data-codexion-age aria-label="Issue window" aria-haspopup="listbox" aria-expanded="false"><span data-codexion-age-label>Last 3 days</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="cx-age-menu" data-codexion-age-menu role="listbox" aria-label="Issue window"><button id="codexion-age-3" class="cx-age-option" data-codexion-age-option="3" role="option">Last 3 days</button><button id="codexion-age-7" class="cx-age-option" data-codexion-age-option="7" role="option">Last 7 days</button><button id="codexion-age-14" class="cx-age-option" data-codexion-age-option="14" role="option">Last 14 days</button><button id="codexion-age-30" class="cx-age-option" data-codexion-age-option="30" role="option">Last 30 days</button><button id="codexion-age-all" class="cx-age-option" data-codexion-age-option="all" role="option">All open issues</button></div></div></div><div class="cx-card"><div class="cx-filter-wrap"><div class="cx-filter-control"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="4.25"/><path d="m10.25 10.25 3 3" stroke-linecap="round"/></svg><input class="cx-filter" data-codexion-filter aria-label="Filter repositories" placeholder="Filter repositories"/></div></div><div class="cx-status" data-codexion-status>Checking GitHub CLI…</div><div class="cx-repos" data-codexion-repos></div></div><section class="cx-ignored-section"><h2>Ignored Issues</h2><p>Issues hidden from the Inbox on this Mac.</p><div class="cx-card"><div class="cx-ignored-empty" data-codexion-ignored-empty>No ignored issues.</div><div data-codexion-ignored></div></div></section><div class="cx-version" data-codexion-version></div></div>\`;
+    for(const option of nativePage.querySelectorAll("[data-codexion-age-option]")){option.insertAdjacentHTML("beforeend",'<svg class="cx-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3.5 8 3 3 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>');}
     main.append(nativePage);
     nativePage.querySelector("[data-codexion-version]").textContent="Codexion "+codexionVersion;
     nativePage.querySelector("[data-codexion-filter]").oninput=()=>renderNativeSettings();
@@ -328,12 +348,12 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     const closeAgeMenu=(focus=false)=>{ageMenu.dataset.open="false";ageButton.setAttribute("aria-expanded","false");if(focus)ageButton.focus();};
     ageButton.onclick=()=>{const open=ageMenu.dataset.open!=="true";ageMenu.dataset.open=String(open);ageButton.setAttribute("aria-expanded",String(open));if(open)(ageMenu.querySelector('[aria-selected="true"]')||ageMenu.firstElementChild)?.focus();};
     ageButton.onkeydown=(event)=>{if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();ageMenu.dataset.open="true";ageButton.setAttribute("aria-expanded","true");(ageMenu.querySelector('[aria-selected="true"]')||ageMenu.firstElementChild)?.focus();}};
-    for(const option of ageMenu.querySelectorAll("[data-codexion-age-option]")){option.onclick=()=>{const value=option.dataset.codexionAgeOption;closeAgeMenu(true);queue({type:"set-max-age",maxAgeDays:value==="all"?null:Number(value)});};option.onkeydown=(event)=>{const options=[...ageMenu.querySelectorAll("[data-codexion-age-option]")];const index=options.indexOf(option);if(event.key==="Escape"){event.preventDefault();closeAgeMenu(true);}else if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();options[(index+(event.key==="ArrowDown"?1:-1)+options.length)%options.length].focus();}};}
+    for(const option of ageMenu.querySelectorAll("[data-codexion-age-option]")){option.onclick=()=>{const value=option.dataset.codexionAgeOption;const maxAgeDays=value==="all"?null:Number(value);closeAgeMenu(true);if(settingsSnapshot){settingsSnapshot.maxAgeDays=maxAgeDays;renderNativeSettings();}queue({type:"set-max-age",maxAgeDays});};option.onkeydown=(event)=>{const options=[...ageMenu.querySelectorAll("[data-codexion-age-option]")];const index=options.indexOf(option);if(event.key==="Escape"){event.preventDefault();closeAgeMenu(true);}else if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();options[(index+(event.key==="ArrowDown"?1:-1)+options.length)%options.length].focus();}};}
     nativePage.addEventListener("pointerdown",event=>{if(!event.target.closest(".cx-select"))closeAgeMenu();});
     const settingsButtons=[...document.querySelectorAll('nav[aria-label="Settings"] button')];
-    nativePreviousButton=settingsButtons.find(button=>button!==nativeButton&&(button.getAttribute("aria-current")==="page"||button.classList.contains("bg-token-list-hover-background")))||null;
-    for(const button of settingsButtons){if(button===nativeButton)continue;button.removeAttribute("aria-current");button.classList.remove("bg-token-list-hover-background");}
-    nativeButton?.setAttribute("aria-current","page"); nativeButton?.classList.add("bg-token-list-hover-background");
+    nativePreviousButton=settingsButtons.find(button=>button!==nativeButton&&(button.getAttribute("aria-current")==="page"||button.classList.contains("bg-primary-ghost-hover")))||null;
+    for(const button of settingsButtons)setNativeButtonSelected(button,button===nativeButton);
+    syncNativeSelection();
     if(!settingsSnapshot)queue({type:"load-settings"});renderNativeSettings();
   };
   window.__codexionUpdateIssueInbox = (next, isSettings=false) => { if(isSettings){settingsSnapshot=next; renderSettings(); renderNativeSettings();} else {snapshot=next; renderIssues();} errorBox.hidden=true; };
@@ -354,7 +374,7 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     let openInControl=openInButton;
     while(openInControl?.parentElement&&!openInControl.parentElement.classList?.contains("ms-auto"))openInControl=openInControl.parentElement;
     const openInGroup=openInControl?.parentElement?.classList?.contains("ms-auto")?openInControl.parentElement:null;
-    if(openInGroup&&openInControl){if(host.parentElement!==openInGroup||host.nextSibling!==openInControl)openInGroup.insertBefore(host,openInControl);}
+    if(openInGroup&&openInControl){let companionGroup=document.getElementById("codexion-titlebar-actions");if(!companionGroup){companionGroup=document.createElement("span");companionGroup.id="codexion-titlebar-actions";companionGroup.className="no-drag";companionGroup.style.alignItems="center";companionGroup.style.display="inline-flex";companionGroup.style.gap="6px";companionGroup.style.marginInlineEnd="6px";companionGroup.style.setProperty("-webkit-app-region","no-drag");}if(companionGroup.parentElement!==openInControl)openInControl.insertBefore(companionGroup,openInControl.firstChild);if(host.parentElement!==companionGroup)companionGroup.append(host);}
     else {
     const labels=["Toggle pinned summary","Toggle bottom panel","Toggle side panel"];
     const candidates=labels.flatMap(label=>Array.from(document.querySelectorAll('button[aria-label="'+label+'"]')));
@@ -368,17 +388,18 @@ export const INSTALL_ISSUE_INBOX_EXPRESSION = `(() => {
     if(integrationList && !document.getElementById("codexion-settings-nav")) {
       const template=integrationList.querySelector("button");
       if(template){
-        nativeButton=template.cloneNode(true);nativeButton.id="codexion-settings-nav";nativeButton.removeAttribute("data-settings-panel-slug");nativeButton.removeAttribute("aria-current");nativeButton.classList.remove("bg-token-list-hover-background");nativeButton.setAttribute("aria-label","Codexion");
+        nativeButton=template.cloneNode(true);nativeButton.id="codexion-settings-nav";nativeButton.removeAttribute("data-settings-panel-slug");nativeButton.removeAttribute("aria-current");setNativeButtonSelected(nativeButton,false);nativeButton.setAttribute("aria-label","Codexion");
         const label=nativeButton.querySelector(".text-fade-truncate");if(label)label.textContent="Codexion";
         const icon=nativeButton.querySelector("svg");if(icon)icon.outerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" style="height:16px;width:16px" aria-hidden="true"><path d="M13 2.75H6.25C4.15 2.75 2.75 4.2 2.75 6.3v3.4c0 2.1 1.4 3.55 3.5 3.55H13" stroke-width="1.5"/><path d="M11 6H7.5C6.55 6 6 6.75 6 8s.55 2 1.5 2H11" stroke-width="1.25"/></svg>';
         nativeButton.onclick=(event)=>{event.preventDefault();event.stopPropagation();openNativePage();};integrationList.append(nativeButton);
       }
     }
-    if(nativePage && !document.getElementById("codexion-settings-nav")) closeNativePage();
+    if(nativePage&&!nativePage.isConnected){nativePage=null;nativeOriginal=null;nativeSelection=null;nativePreviousButton=null;}
+    else if(nativePage)syncNativeSelection();
     const threadId=activeThreadId();if(threadId!==currentThreadId)prefetchCurrentRepository();
   };
   place(); const observer=new MutationObserver(place); observer.observe(document.body,{attributes:true,attributeFilter:["data-app-action-sidebar-thread-active"],childList:true,subtree:true});
-  window.__codexionIssueInboxCleanup=()=>{observer.disconnect();hideTriggerTooltip();document.removeEventListener("pointerdown",window.__codexionIssueOutside,true);document.removeEventListener("click",handleSettingsNavigation,true);closeNativePage();nativeButton?.remove();host.remove();overlayHost?.remove();};
+  window.__codexionIssueInboxCleanup=()=>{observer.disconnect();hideTriggerTooltip();document.removeEventListener("pointerdown",window.__codexionIssueOutside,true);document.removeEventListener("click",handleSettingsNavigation,true);closeNativePage();nativeButton?.remove();host.remove();const companionGroup=document.getElementById("codexion-titlebar-actions");if(companionGroup&&companionGroup.childElementCount===0)companionGroup.remove();overlayHost?.remove();};
   return true;
 })()`;
 

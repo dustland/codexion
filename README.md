@@ -60,6 +60,11 @@ second settings window or Dock UI. Releases that include the built-in updater ch
 GitHub release feed automatically while Codexion is running. An installation from an older release
 without the updater needs one final manual DMG upgrade.
 
+Codexion keeps watching the Codex renderer after launch. If Codex is later reopened without CDP,
+the companion repairs the launch configuration, reconnects, and restores quota and Issue Inbox
+state automatically. Opening Codexion again from Applications restarts its background Core, which
+is useful when diagnosing a stalled companion.
+
 ### From source
 
 ```sh
@@ -76,8 +81,9 @@ scripts/start.command
 ```
 
 If the current Codex process does not expose CDP, Codexion asks it to quit normally and opens it
-again with loopback debugging enabled. Save active work before the first run. Codexion does not
-force-terminate the app.
+again with loopback debugging enabled. Save active work before the first run. If Codex accepts the
+normal quit request but remains running for five seconds, Codexion force-terminates that verified
+process and relaunches it; it never targets an unverified PID or starts a competing second instance.
 
 Use a different port or app location when needed:
 
@@ -105,6 +111,7 @@ pnpm start -- \
 8. Read a normalized weekly snapshot and non-secret account identity from the Codex app-server.
 9. Update the title-bar speedometer and remaining percentage every minute.
 10. Poll selected GitHub repositories and render unhandled issues in the title bar.
+11. Health-check the renderer and restore both extensions if Codex is restarted.
 
 Usage retrieval and UI injection are intentionally separate: app-server provides data, while CDP
 only renders the extension. This avoids coupling data access to unstable renderer HTTP routes.
@@ -116,8 +123,10 @@ only renders the extension. This avoids coupling data access to unstable rendere
 3. Choose **Codexion** at the bottom of the **Integrations** section.
 4. Filter and select the repositories to monitor. Changes apply immediately.
 
-The Issue age control limits the Inbox to the last 3, 7, 14, or 30 days, or all open issues. The
-default is 3 days. Each Inbox item shows its age in the upper-right corner.
+The **Issue window** control limits the Inbox to the last 3, 7, 14, or 30 days, or all open issues.
+The default is 3 days. Changes apply immediately, persist locally, and use the same right-aligned
+checkmark selection pattern as native Codex menus. Each Inbox item shows its age in the upper-right
+corner.
 
 Use **Current repo** in the Inbox header to temporarily query the repository associated with the
 active Codex task. It does not need to be selected above, and the switch does not change your saved
@@ -185,7 +194,9 @@ curl http://127.0.0.1:9341/json/version
 | The profile percentage shows `—` | Usage is unavailable or unrecognized; Codexion never estimates it from local task counts |
 | The port is occupied | Select another `CODEXION_CDP_PORT` or stop the unrelated local process |
 | Multiple main processes are detected | Quit all Codex Desktop instances normally, then start again |
-| Codex does not quit normally | Codexion stops; it does not force-terminate or launch a second instance |
+| Codex was restarted and extensions disappeared | Keep Codexion running; it detects the replacement process and restores CDP and extension state automatically |
+| Opening Codexion appears to do nothing | It has no Dock window; opening it again restarts the background Core. Inspect `codexion.log` for the result |
+| Codex does not quit normally | After a five-second grace period, Codexion force-terminates only the verified Codex PID and relaunches it with CDP |
 
 ## Project layout
 
@@ -231,7 +242,7 @@ background example, resource handling, locator rules, and a security checklist.
 - [x] Local GitHub Issue Inbox with repository selection and idempotent task dispatch
 - [x] Codexion page in Codex Settings
 - [x] `doctor` diagnostics
-- [ ] Installable macOS companion application
+- [x] Installable macOS companion application with signed automatic updates
 - [ ] Extension registry and unified enable/disable behavior
 - [ ] Local background and theme extension
 - [ ] One-click native reset for all extensions
@@ -264,7 +275,8 @@ pnpm build
 
 - **Local first:** data, CDP, and control remain on the local machine.
 - **Verify ownership:** a reachable port is insufficient; it must belong to the target process.
-- **Normal lifecycle:** prefer a normal quit and reject force-kills or uncontrolled second instances.
+- **Controlled lifecycle:** prefer a normal quit, then force-restart only the verified Codex PID
+  when it refuses to exit; never launch an uncontrolled second instance.
 - **Adapter boundaries:** isolate Codex protocol and DOM changes in providers and extensions.
 - **Honest status:** show unavailable state when real data is absent; never invent a plausible value.
 - **Reversible UI:** every enhancement must be independently removable and restore native behavior.

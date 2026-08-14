@@ -1,7 +1,7 @@
 # Releasing Codexion
 
 Codexion publishes a signed and notarized Apple Silicon app when a semantic version tag is pushed.
-The tag must match `package.json`, for example `v0.2.0` for package version `0.2.0`.
+The tag must match `package.json`, for example `v0.3.0` for package version `0.3.0`.
 
 ## Required repository secrets
 
@@ -18,10 +18,10 @@ the job. They must never be committed to the repository.
 
 ## Release
 
-1. Update `package.json`, `src/index.ts`, and `CHANGELOG.md` to the same version.
+1. Update `package.json`, `src/version.ts`, and `CHANGELOG.md` to the same version.
 2. Run `pnpm lint && pnpm check && pnpm test && pnpm build`.
 3. Commit and push the release changes.
-4. Create and push the tag: `git tag v0.2.0 && git push origin v0.2.0`.
+4. Create and push the tag: `git tag v0.3.0 && git push origin v0.3.0`.
 5. The Release workflow builds, signs, notarizes, staples, verifies, and publishes the DMG, app ZIP,
    SHA-256 checksum, and signed `appcast.xml`. The matching version section in `CHANGELOG.md`
    becomes the GitHub Release Notes; publishing fails instead of falling back to a commit dump when

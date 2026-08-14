@@ -14,11 +14,19 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('nav[aria-label="Settings"]');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-settings-nav");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-issue-inbox-overlay");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("codexion-titlebar-actions");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain(
+      'setProperty("-webkit-app-region", "no-drag")',
+    );
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("--color-background-panel");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("document.body.append(overlayHost)");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("openCodexionSettings");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("handleSettingsNavigation");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("nativePreviousButton");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("syncNativeSelection");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("bg-primary-ghost-hover");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("text-codex-icon-active");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("!nativePage.isConnected");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("__codexionIssueInboxCleanup");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"handle"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"ignore"');
@@ -64,11 +72,16 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-repositories"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"unignore"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-max-age"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("settingsSnapshot.maxAgeDays=maxAgeDays");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Ignored Issues");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Issue window");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('role="listbox"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("data-codexion-age-option");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).not.toContain('<select class="cx-age"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="cx-check"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).not.toContain(
+      'button.cx-age-option[aria-selected="true"]{background:',
+    );
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="cx-filter-wrap"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('class="cx-card"><div class="cx-filter-wrap"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('stroke="currentColor"');

@@ -67,6 +67,19 @@ async function runCli(args: string[]): Promise<void> {
   const attached = await attachToCodex(port, {
     ...(appPath === undefined ? {} : { appPath }),
     log: (message) => console.log(`[Codexion] ${message}`),
+    ...(command === "start"
+      ? {
+          recoverRenderer: async () => {
+            const diagnosis = await diagnoseCodex(lifecycleOptions);
+            if (diagnosis.processes.length === 0) return false;
+            if (!diagnosis.cdpReady) {
+              console.log("[Codexion] Codex restarted without CDP; restoring integration...");
+              await startCodexWithCdp(lifecycleOptions);
+            }
+            return true;
+          },
+        }
+      : {}),
   });
   console.log(`[Codexion] watching weekly usage on CDP port ${port}`);
 

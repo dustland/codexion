@@ -6,11 +6,30 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
-## 0.2.9 - 2026-08-15
+## 0.3.0 - 2026-08-15
+
+### Added
+
+- Automatically detect when Codex restarts without its CDP endpoint, restore the required launch
+  configuration, reconnect to the new renderer, and rehydrate quota and Issue Inbox state.
+- Restart the companion Core when an already-running Codexion app is opened again, and write its
+  diagnostics to `~/Library/Application Support/Codexion/codexion.log`.
 
 ### Changed
 
+- Place quota and Issues inside the native Open in action container with full rectangular hit areas,
+  native spacing, and explicit non-draggable title-bar behavior.
+- Make Issue window changes immediate and persistent, and use Codex's native right-aligned checkmark
+  instead of a selected-row background in its dropdown.
 - Reduce and offset the Issues count badge so the circle-dot symbol remains clearly visible.
+
+### Fixed
+
+- Preserve the Codexion Settings page and its single native sidebar selection while Codex rebuilds
+  the Settings navigation.
+- Fall back to a forced application restart when Codex accepts but does not complete a normal quit,
+  allowing Codexion to restore CDP reliably.
+- Keep quota hovercards and Issues hover and click behavior active across the complete control bounds.
 
 ## 0.2.8 - 2026-08-15
 

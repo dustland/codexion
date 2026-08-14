@@ -13,6 +13,7 @@ describe("startCodexWithCdp", () => {
     const result = await startCodexWithCdp(
       {},
       {
+        forceQuit: vi.fn(),
         launch,
         listProcesses: async () => [process(42)],
         ownsPort: async () => true,
@@ -42,6 +43,7 @@ describe("startCodexWithCdp", () => {
     const result = await startCodexWithCdp(
       {},
       {
+        forceQuit: vi.fn(),
         launch,
         listProcesses: async () => running,
         ownsPort: async (pid) => pid === 20,
@@ -57,11 +59,41 @@ describe("startCodexWithCdp", () => {
     expect(launch).toHaveBeenCalledOnce();
   });
 
+  it("forces a restart when Codex ignores the normal quit request", async () => {
+    let running = [process(10)];
+    let ready = false;
+    const forceQuit = vi.fn(async () => {
+      running = [];
+    });
+    const launch = vi.fn(async () => {
+      running = [process(20)];
+      ready = true;
+      return 20;
+    });
+
+    const result = await startCodexWithCdp(
+      { timeoutMs: 2 },
+      {
+        forceQuit,
+        launch,
+        listProcesses: async () => running,
+        ownsPort: async (pid) => pid === 20,
+        probePort: async () => ready,
+        quit: vi.fn(),
+        wait: async () => undefined,
+      },
+    );
+
+    expect(forceQuit).toHaveBeenCalledOnce();
+    expect(result).toEqual({ pid: 20, restarted: true });
+  });
+
   it("rejects a port owned by another process", async () => {
     await expect(
       startCodexWithCdp(
         {},
         {
+          forceQuit: vi.fn(),
           launch: vi.fn(),
           listProcesses: async () => [process(42)],
           ownsPort: async () => false,

@@ -25,6 +25,7 @@ export interface StartCodexResult {
 }
 
 interface LifecycleDependencies {
+  forceQuit(process: CodexProcess): Promise<void>;
   launch(executablePath: string, args: string[]): Promise<number>;
   listProcesses(executablePath: string): Promise<CodexProcess[]>;
   ownsPort(pid: number, port: number): Promise<boolean>;
@@ -46,6 +47,7 @@ export async function startCodexWithCdp(
   const executablePath = join(appPath, "Contents", "MacOS", "ChatGPT");
   const timeoutMs = options.timeoutMs ?? 30_000;
   const deps: LifecycleDependencies = {
+    forceQuit: requestForcedQuit,
     launch: launchDetached,
     listProcesses,
     ownsPort,
@@ -74,11 +76,20 @@ export async function startCodexWithCdp(
 
   if (existing[0] !== undefined) {
     await deps.quit(existing[0]);
-    await waitUntil(async () => (await deps.listProcesses(executablePath)).length === 0, {
-      deps,
-      message: "Codex Desktop did not exit normally",
-      timeoutMs,
-    });
+    try {
+      await waitUntil(async () => (await deps.listProcesses(executablePath)).length === 0, {
+        deps,
+        message: "Codex Desktop did not exit normally",
+        timeoutMs: Math.min(timeoutMs, 5_000),
+      });
+    } catch {
+      await deps.forceQuit(existing[0]);
+      await waitUntil(async () => (await deps.listProcesses(executablePath)).length === 0, {
+        deps,
+        message: "Codex Desktop did not exit after a forced restart",
+        timeoutMs: Math.max(1_000, timeoutMs - 5_000),
+      });
+    }
   }
 
   const pid = await deps.launch(executablePath, [
@@ -140,6 +151,24 @@ function run(argv) {
   const app = $.NSRunningApplication.runningApplicationWithProcessIdentifier(Number(argv[0]));
   if (!app) throw new Error("Codex Desktop disappeared");
   if (!app.terminate) throw new Error("Codex Desktop refused to quit normally");
+  return true;
+}`;
+  await execFile("/usr/bin/osascript", [
+    "-l",
+    "JavaScript",
+    "-e",
+    source,
+    "--",
+    String(target.pid),
+  ]);
+}
+
+async function requestForcedQuit(target: CodexProcess): Promise<void> {
+  const source = `ObjC.import("AppKit");
+function run(argv) {
+  const app = $.NSRunningApplication.runningApplicationWithProcessIdentifier(Number(argv[0]));
+  if (!app) return true;
+  if (!app.forceTerminate) throw new Error("Codex Desktop refused a forced restart");
   return true;
 }`;
   await execFile("/usr/bin/osascript", [

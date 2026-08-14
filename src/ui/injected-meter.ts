@@ -11,9 +11,11 @@ export const INSTALL_METER_EXPRESSION = `(() => {
 
   const host = document.createElement("span");
   host.id = meterId;
+  host.className = "no-drag";
   host.setAttribute("role", "status");
   host.setAttribute("aria-label", "Weekly usage unavailable");
   host.style.pointerEvents = "auto";
+  host.style.setProperty("-webkit-app-region", "no-drag");
 
   const shadow = host.attachShadow({ mode: "open" });
   const style = document.createElement("style");
@@ -26,11 +28,13 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       height: 28px;
     }
     .meter {
+      -webkit-app-region: no-drag;
       align-items: center;
       display: flex;
       gap: 5px;
       height: 28px;
       padding: 0 5px;
+      pointer-events: auto;
     }
     svg {
       height: 16px;
@@ -140,10 +144,20 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       : null;
     const issueHost = document.getElementById("codexion-issue-inbox-host");
     if (openInGroup && openInControl) {
-      const reference = issueHost?.parentElement === openInGroup ? issueHost : openInControl;
-      if (host.parentElement !== openInGroup || (reference !== host && host.nextSibling !== reference)) {
-        openInGroup.insertBefore(host, reference);
+      let companionGroup = document.getElementById("codexion-titlebar-actions");
+      if (!companionGroup) {
+        companionGroup = document.createElement("span");
+        companionGroup.id = "codexion-titlebar-actions";
+        companionGroup.className = "no-drag";
+        companionGroup.style.alignItems = "center";
+        companionGroup.style.display = "inline-flex";
+        companionGroup.style.gap = "6px";
+        companionGroup.style.marginInlineEnd = "6px";
+        companionGroup.style.setProperty("-webkit-app-region", "no-drag");
       }
+      if (companionGroup.parentElement !== openInControl) openInControl.insertBefore(companionGroup, openInControl.firstChild);
+      const reference = issueHost?.parentElement === companionGroup ? issueHost : companionGroup.firstChild;
+      if (host.parentElement !== companionGroup || (reference !== host && host.nextSibling !== reference)) companionGroup.insertBefore(host, reference);
       return;
     }
     const labels = ["Toggle pinned summary", "Toggle bottom panel", "Toggle side panel"];
@@ -178,6 +192,8 @@ export const INSTALL_METER_EXPRESSION = `(() => {
     document.removeEventListener("pointermove", trackPointer, true);
     hideTooltip();
     host.remove();
+    const companionGroup = document.getElementById("codexion-titlebar-actions");
+    if (companionGroup && companionGroup.childElementCount === 0) companionGroup.remove();
     tooltipHost.remove();
   };
 

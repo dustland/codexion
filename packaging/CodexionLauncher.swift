@@ -10,6 +10,7 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
         userDriverDelegate: nil
     )
     private var coreProcess: Process?
+    private var coreLogHandle: FileHandle?
     private var monitorTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,6 +31,12 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
         if let process = coreProcess, process.isRunning {
             process.terminate()
         }
+        try? coreLogHandle?.close()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        restartCore()
+        return false
     }
 
     private func launchCore() throws {
@@ -46,7 +53,11 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
         process.executableURL = coreURL
         process.arguments = Array(CommandLine.arguments.dropFirst())
         process.environment = coreEnvironment()
+        let logHandle = try openCoreLog()
+        process.standardOutput = logHandle
+        process.standardError = logHandle
         try process.run()
+        coreLogHandle = logHandle
         coreProcess = process
 
         monitorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
@@ -60,6 +71,43 @@ final class CodexionAppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.terminate(nil)
             }
         }
+    }
+
+    private func restartCore() {
+        monitorTimer?.invalidate()
+        monitorTimer = nil
+        if let process = coreProcess, process.isRunning {
+            process.terminate()
+        }
+        coreProcess = nil
+        try? coreLogHandle?.close()
+        coreLogHandle = nil
+        do {
+            try launchCore()
+        } catch {
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = "Codexion could not restart"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+    }
+
+    private func openCoreLog() throws -> FileHandle {
+        let supportURL = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appendingPathComponent("Codexion", isDirectory: true)
+        try FileManager.default.createDirectory(at: supportURL, withIntermediateDirectories: true)
+        let logURL = supportURL.appendingPathComponent("codexion.log")
+        if !FileManager.default.fileExists(atPath: logURL.path) {
+            FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        }
+        let handle = try FileHandle(forWritingTo: logURL)
+        try handle.seekToEnd()
+        return handle
     }
 
     private func coreEnvironment() -> [String: String] {

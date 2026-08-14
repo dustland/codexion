@@ -8,6 +8,8 @@ describe("injected sanity meter", () => {
     expect(INSTALL_METER_EXPRESSION).toContain("rect.x > window.innerWidth / 2");
     expect(INSTALL_METER_EXPRESSION).toContain("host.nextSibling === issueHost");
     expect(INSTALL_METER_EXPRESSION).toContain('classList?.contains("ms-auto")');
+    expect(INSTALL_METER_EXPRESSION).toContain("codexion-titlebar-actions");
+    expect(INSTALL_METER_EXPRESSION).toContain('setProperty("-webkit-app-region", "no-drag")');
     expect(INSTALL_METER_EXPRESSION).toContain('viewBox", "0 0 20 20"');
     expect(INSTALL_METER_EXPRESSION).toContain("M10.8343 12.0693");
     expect(INSTALL_METER_EXPRESSION).toContain("Weekly usage unavailable");

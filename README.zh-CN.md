@@ -56,7 +56,9 @@ Applications 后打开。它是后台启动器与 companion，不会增加第二
 内置更新器的新版本会在 Codexion 运行期间自动检查经过签名的 GitHub Release 更新。若当前
 安装的是尚未包含更新器的旧版本，需要最后手动安装一次新版 DMG。
 
-### 从源码运行
+Codexion 启动后会持续检查 Codex renderer。如果 Codex 后来被重新打开但没有 CDP，companion
+会自动修复启动方式、重新连接并恢复 quota 与 Issue Inbox。再次从 Applications 打开 Codexion
+会重启其后台 Core，可用于恢复卡住的 companion。
 
 ### 从源码运行
 
@@ -74,7 +76,9 @@ scripts/start.command
 ```
 
 首次启动或 Codex 当前没有开启 CDP 时，Codexion 会请求 Codex Desktop 正常退出，
-随后带本地调试参数重新打开。当前任务应先保存；整个过程不会强制结束进程。
+随后带本地调试参数重新打开。当前任务应先保存。如果 Codex 接受退出请求但 5 秒内仍未退出，
+Codexion 会只对已经验证身份的 Codex PID 执行强制终止并重新启动；它不会操作未知进程，
+也不会启动互相竞争的第二实例。
 
 ### 自定义端口或应用位置
 
@@ -102,6 +106,7 @@ pnpm start -- \
 8. 通过 Codex app-server 获取标准化的周用量快照和非敏感账户身份。
 9. 每分钟更新右上角的速度表图标与剩余百分比。
 10. 轮询选定的 GitHub 仓库，并在右上角显示未处理 issue。
+11. 持续检查 renderer，并在 Codex 重启后恢复两个扩展。
 
 数据读取与 UI 注入相互独立：app-server 负责用量，CDP 只负责显示。这避免了依赖
 renderer 内部、容易变化的私有 HTTP URL。
@@ -113,8 +118,9 @@ renderer 内部、容易变化的私有 HTTP URL。
 3. 在 **Integrations** 分组底部选择 **Codexion**。
 4. 搜索并多选需要监控的仓库，选择会立即生效。
 
-`Issue age` 可以筛选最近 3、7、14、30 天或全部 open issues，默认最近 3 天。Inbox 中
-每个 issue 的右上角会显示距今时间。
+**Issue window** 可以筛选最近 3、7、14、30 天或全部 open issues，默认最近 3 天。
+选择会立即生效并保存，菜单使用与 Codex 原生控件一致的右侧勾选样式。Inbox 中每个 issue
+的右上角会显示距今时间。
 
 Inbox 顶部的 **Current repo** 可临时查询当前 Codex task 对应的仓库，无需先在上面选中，
 也不会更改已经保存的监控仓库。主列表仍遵循已配置的时间范围；更早且仍符合条件的 issue
@@ -179,7 +185,9 @@ curl http://127.0.0.1:9341/json/version
 | 账户按钮显示 `—` | 用量接口暂不可用或响应无法识别；查看日志，不会用本地任务数量估算 |
 | 端口已占用 | 更换 `CODEXION_CDP_PORT`，或关闭占用该端口的本地进程 |
 | 检测到多个 Codex 主进程 | 正常退出所有 Codex Desktop 窗口后重新运行 |
-| Codex 无法正常退出 | Codexion 会停止操作，不会强杀或再启动第二个实例 |
+| Codex 重启后扩展消失 | 保持 Codexion 运行；它会检测新进程并自动恢复 CDP 与扩展状态 |
+| 再次打开 Codexion 看似没有反应 | 它没有 Dock 窗口；再次打开会重启后台 Core，可查看 `codexion.log` |
+| Codex 无法正常退出 | 等待 5 秒后，Codexion 只会强制终止已验证的 Codex PID，再带 CDP 重启 |
 
 ## 项目结构
 
@@ -225,7 +233,7 @@ extension 构建，而不是继续扩张 Sanity Meter 或生命周期模块。
 - [x] 支持仓库多选和幂等 task 调度的 GitHub Issue Inbox
 - [x] Codex Settings 中的 Codexion 页面
 - [x] `doctor` 诊断命令
-- [ ] 可安装的稳定 macOS Companion `.app`
+- [x] 可安装且支持签名自动更新的 macOS Companion `.app`
 - [ ] extension registry 和统一启用/禁用机制
 - [ ] 本地背景与主题扩展
 - [ ] 所有 extension 的一键恢复原生界面
@@ -256,7 +264,8 @@ pnpm build
 
 - Local first：数据、CDP 和控制服务只在本机工作。
 - Verify ownership：不能只判断端口“能访问”，还要验证属于目标 Codex 进程。
-- Normal lifecycle：优先正常退出，拒绝强杀和不受控的第二实例。
+- Controlled lifecycle：优先正常退出；仅在已验证的 Codex PID 拒绝退出时强制重启，
+  绝不启动不受控的第二实例。
 - Adapter boundaries：Codex 协议和 DOM 变化限制在 provider/extension 内。
 - Honest status：没有真实数据就显示不可用，不生成看似可信的估算值。
 - Reversible UI：所有界面增强都应可单独关闭，并能恢复原生界面。
