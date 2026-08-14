@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.2.6 - 2026-08-14
+
+### Fixed
+
+- Make the quota hovercard deterministic in the draggable title bar by tracking the pointer against
+  the complete quota and hovercard bounds instead of relying on fragile enter and leave events.
+
 ## 0.2.5 - 2026-08-14
 
 ### Fixed

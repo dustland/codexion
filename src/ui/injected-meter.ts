@@ -84,12 +84,17 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   let latestSnapshot = null;
   let tooltipTimer = null;
   let tooltipHideTimer = null;
-  const hideTooltip = () => { clearTimeout(tooltipTimer);clearTimeout(tooltipHideTimer);tooltip.dataset.open = "false"; };
-  const scheduleTooltipHide = () => { clearTimeout(tooltipHideTimer);tooltipHideTimer=setTimeout(()=>{tooltip.dataset.open="false";},160); };
+  const hideTooltip = () => { clearTimeout(tooltipTimer);clearTimeout(tooltipHideTimer);tooltipTimer=null;tooltipHideTimer=null;tooltip.dataset.open = "false"; };
+  const scheduleTooltipHide = () => {
+    if (tooltipHideTimer) return;
+    tooltipHideTimer=setTimeout(()=>{tooltipHideTimer=null;tooltip.dataset.open="false";},220);
+  };
   const showTooltip = () => {
-    clearTimeout(tooltipTimer);
     clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = null;
+    if (tooltip.dataset.open === "true" || tooltipTimer) return;
     tooltipTimer = setTimeout(() => {
+      tooltipTimer = null;
       const account = latestSnapshot?.account;
       const profile = document.querySelector('button[aria-label="Open profile menu"]');
       const profileName = profile?.innerText?.trim()?.split("\\n")[0];
@@ -103,11 +108,18 @@ export const INSTALL_METER_EXPRESSION = `(() => {
       tooltip.style.left = Math.max(8, Math.min(innerWidth - 256, rect.left)) + "px";
       tooltip.style.top = Math.min(innerHeight - 20, rect.bottom + 7) + "px";
       tooltip.dataset.open = "true";
-    }, 180);
+    }, 80);
   };
-  host.addEventListener("pointerenter", showTooltip);
-  host.addEventListener("pointerleave", scheduleTooltipHide);
-  tooltip.addEventListener("mouseenter",()=>clearTimeout(tooltipHideTimer));
+  const containsPoint = (rect, x, y) => x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  const trackPointer = (event) => {
+    const overHost = containsPoint(host.getBoundingClientRect(), event.clientX, event.clientY);
+    const overTooltip = tooltip.dataset.open === "true" && containsPoint(tooltip.getBoundingClientRect(), event.clientX, event.clientY);
+    if (overHost) showTooltip();
+    else if (overTooltip) { clearTimeout(tooltipHideTimer);tooltipHideTimer=null; }
+    else scheduleTooltipHide();
+  };
+  document.addEventListener("pointermove", trackPointer, true);
+  tooltip.addEventListener("mouseenter",()=>{clearTimeout(tooltipHideTimer);tooltipHideTimer=null;});
   tooltip.addEventListener("mouseleave",scheduleTooltipHide);
   document.body.append(tooltipHost);
 
@@ -142,6 +154,7 @@ export const INSTALL_METER_EXPRESSION = `(() => {
   window.__codexionMeterObserver = observer;
   window.__codexionMeterCleanup = () => {
     observer.disconnect();
+    document.removeEventListener("pointermove", trackPointer, true);
     hideTooltip();
     host.remove();
     tooltipHost.remove();
