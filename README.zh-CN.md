@@ -118,6 +118,10 @@ renderer 内部、容易变化的私有 HTTP URL。
 3. 在 **Integrations** 分组底部选择 **Codexion**。
 4. 搜索并多选需要监控的仓库，选择会立即生效。
 
+页面底部的 **Maintenance** 区域会显示正在运行的 Core 版本，并可在不重启 Codex Desktop
+的情况下重启 Codexion 后台 companion。如果 macOS 没有完成重启，页面会显示超时提示并
+引导查看本地日志。
+
 **Issue window** 可以筛选最近 3、7、14、30 天或全部 open issues，默认最近 3 天。
 选择会立即生效并保存，菜单使用与 Codex 原生控件一致的右侧勾选样式。Inbox 中每个 issue
 的右上角会显示距今时间。

@@ -72,6 +72,8 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-repositories"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"unignore"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-max-age"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"restart-codexion"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Restart Codexion");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("settingsSnapshot.maxAgeDays=maxAgeDays");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Ignored Issues");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Issue window");

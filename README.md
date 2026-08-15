@@ -123,6 +123,10 @@ only renders the extension. This avoids coupling data access to unstable rendere
 3. Choose **Codexion** at the bottom of the **Integrations** section.
 4. Filter and select the repositories to monitor. Changes apply immediately.
 
+The **Maintenance** section shows the running Core version and can restart the Codexion background
+companion without restarting Codex Desktop. The page reports a timeout and points to the local log
+when macOS does not complete the restart request.
+
 The **Issue window** control limits the Inbox to the last 3, 7, 14, or 30 days, or all open issues.
 The default is 3 days. Changes apply immediately, persist locally, and use the same right-aligned
 checkmark selection pattern as native Codex menus. Each Inbox item shows its age in the upper-right

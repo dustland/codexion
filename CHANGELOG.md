@@ -6,6 +6,18 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.3.1 - 2026-08-15
+
+### Added
+
+- Add a native-style Maintenance section to Codexion Settings with the installed Core version and
+  a one-click action to restart the Codexion background companion without restarting Codex Desktop.
+
+### Fixed
+
+- Enforce that the Settings/Core version matches `package.json` during CI so packaged releases
+  cannot display a stale hard-coded version again.
+
 ## 0.3.0 - 2026-08-15
 
 ### Added

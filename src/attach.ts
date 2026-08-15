@@ -1,3 +1,5 @@
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
 import { waitForMainRenderer } from "./cdp/discovery.js";
 import { CdpSession } from "./cdp/session.js";
 import { GithubIssueInboxService } from "./github/inbox-service.js";
@@ -19,6 +21,7 @@ const USAGE_POLL_INTERVAL_MS = 60_000;
 const ISSUE_POLL_INTERVAL_MS = 3 * 60_000;
 const ACTION_POLL_INTERVAL_MS = 750;
 const RENDERER_HEALTH_INTERVAL_MS = 2_000;
+const execFile = promisify(execFileCallback);
 
 interface AttachOptions {
   appPath?: string;
@@ -104,6 +107,10 @@ export async function attachToCodex(
       for (const action of actions) {
         if (action.type === "load-settings") await updateIssueInbox(true);
         if (action.type === "refresh") await updateIssueInbox(false);
+        if (action.type === "restart-codexion") {
+          await execFile("/usr/bin/open", ["-b", "ai.lyu.codexion"]);
+          return;
+        }
         if (action.type === "resolve-current-repo" && action.threadId !== undefined) {
           const result = await issueInbox.currentRepositoryIssues(action.threadId, action.force);
           await session?.evaluate(
