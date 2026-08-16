@@ -52,6 +52,7 @@ export interface IssueDispositionRecord {
 
 export interface CodexionConfig {
   issueInbox: {
+    inspectedWorkspaceRoots: string[];
     maxAgeDays: number | null;
     pollIntervalMinutes: number;
     repositoryWorkspaces: Record<string, string>;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeGithubRemote } from "../src/github/workspaces.js";
+import { isMacOSProtectedWorkspaceRoot, normalizeGithubRemote } from "../src/github/workspaces.js";
 
 describe("normalizeGithubRemote", () => {
   it.each([
@@ -12,5 +12,15 @@ describe("normalizeGithubRemote", () => {
 
   it("rejects non-GitHub remotes", () => {
     expect(normalizeGithubRemote("git@gitlab.com:lyuai/codexion.git")).toBeNull();
+  });
+});
+
+describe("isMacOSProtectedWorkspaceRoot", () => {
+  it("recognizes macOS user-protected folders without touching them", () => {
+    expect(isMacOSProtectedWorkspaceRoot("/Users/test/Documents/project", "/Users/test")).toBe(
+      true,
+    );
+    expect(isMacOSProtectedWorkspaceRoot("/Users/test/Desktop", "/Users/test")).toBe(true);
+    expect(isMacOSProtectedWorkspaceRoot("/Users/test/src/project", "/Users/test")).toBe(false);
   });
 });

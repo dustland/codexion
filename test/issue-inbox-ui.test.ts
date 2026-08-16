@@ -73,6 +73,10 @@ describe("Issue Inbox UI", () => {
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"unignore"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"set-max-age"');
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"restart-codexion"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"open-full-disk-access"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain('type:"rescan-workspaces"');
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Open System Settings");
+    expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("File Access");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Restart Codexion");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("settingsSnapshot.maxAgeDays=maxAgeDays");
     expect(INSTALL_ISSUE_INBOX_EXPRESSION).toContain("Ignored Issues");

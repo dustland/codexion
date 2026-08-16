@@ -6,6 +6,22 @@ The project follows [Semantic Versioning](https://semver.org/) once public relea
 
 ## Unreleased
 
+## 0.3.2 - 2026-08-16
+
+### Added
+
+- Add a native-style File Access section to Codexion Settings with a direct link to macOS Full Disk
+  Access and an explicit workspace rescan action.
+
+### Fixed
+
+- Stop background Issue Inbox polling from repeatedly touching the same workspace directories and
+  triggering recurring macOS file-access prompts.
+- Defer Desktop, Documents, and Downloads workspace inspection until the user explicitly requests a
+  rescan, while continuing to discover ordinary Codex workspaces automatically.
+- Persist successful repository mappings and inspected workspace roots without overwriting
+  concurrent Issue Inbox settings changes.
+
 ## 0.3.1 - 2026-08-15
 
 ### Added

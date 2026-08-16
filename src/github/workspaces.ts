@@ -17,9 +17,9 @@ export interface GithubWorkspace {
   repository: string;
 }
 
-export async function discoverGithubWorkspaces(
+export async function knownCodexWorkspaceRoots(
   statePath = resolve(homedir(), ".codex", ".codex-global-state.json"),
-): Promise<GithubWorkspace[]> {
+): Promise<string[]> {
   let state: GlobalState;
   try {
     state = JSON.parse(await readFile(statePath, "utf8")) as GlobalState;
@@ -28,13 +28,19 @@ export async function discoverGithubWorkspaces(
   }
 
   const roots = new Set<string>();
-  roots.add(process.cwd());
   addStrings(roots, state["electron-saved-workspace-roots"]);
   addStrings(roots, state["active-workspace-roots"]);
   addStrings(roots, state["thread-workspace-root-hints"]);
 
+  return [...roots];
+}
+
+export async function discoverGithubWorkspaces(
+  roots?: readonly string[],
+): Promise<GithubWorkspace[]> {
+  const candidates = roots ?? (await knownCodexWorkspaceRoots());
   const workspaces = await Promise.all(
-    [...roots].map(async (path): Promise<GithubWorkspace | null> => {
+    candidates.map(async (path): Promise<GithubWorkspace | null> => {
       try {
         const { stdout } = await execFileAsync("git", ["-C", path, "remote", "get-url", "origin"], {
           timeout: 3_000,
@@ -47,6 +53,13 @@ export async function discoverGithubWorkspaces(
     }),
   );
   return workspaces.filter((item): item is GithubWorkspace => item !== null);
+}
+
+export function isMacOSProtectedWorkspaceRoot(path: string, home = homedir()): boolean {
+  const protectedRoots = ["Desktop", "Documents", "Downloads"].map((directory) =>
+    resolve(home, directory),
+  );
+  return protectedRoots.some((root) => path === root || path.startsWith(`${root}/`));
 }
 
 export async function repositoryForWorkspace(path: string): Promise<string | null> {

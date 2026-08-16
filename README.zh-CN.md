@@ -133,8 +133,12 @@ Inbox 顶部的 **Current repo** 可临时查询当前 Codex task 对应的仓�
 面板通常无需等待；缓存过期时会保留旧结果并在后台更新，Refresh 会跳过缓存强制刷新。
 Codexion Settings 使用的仓库目录也会在启动时预取并缓存 5 分钟，仓库选择仍会实时生效。
 
-Codexion 会读取 Codex 已知 workspace，并根据 GitHub `origin` 自动匹配仓库。没有匹配
-workspace 的 issue 仍会显示，但“处理”会给出明确错误且不会创建 task。
+Codexion 会读取 Codex 已知 workspace，并根据 GitHub `origin` 自动匹配仓库。每个普通
+workspace 根目录只会被检查一次并记录在本地，因此后台轮询不会持续访问同一个目录。位于桌面、
+文稿和下载中的 workspace 不会被后台轮询访问。如果 workspace 位于这些或其他受
+保护位置，可在 **File Access > Open System Settings** 中为 Codexion 选择性开启 Full Disk
+Access，然后点击 **Rescan**。Codexion 不会扫描整块磁盘，只检查 Codex 已记录的 workspace。
+没有匹配 workspace 的 issue 仍会显示，但“处理”会给出明确错误且不会创建 task。
 
 被忽略的 issue 会显示在同一设置页的 **Ignored Issues** 区域。选择 **Unignore** 即可
 恢复；如果它仍为 open 且符合其他筛选条件，会在刷新后重新进入 Inbox。

@@ -5,6 +5,8 @@ import { GithubIssueTaskStarter, type StartedIssueTask } from "./thread-starter.
 import type { GithubRepository, IssueInboxSnapshot, IssueReference } from "./types.js";
 import {
   discoverGithubWorkspaces,
+  isMacOSProtectedWorkspaceRoot,
+  knownCodexWorkspaceRoots,
   repositoryForWorkspace,
   workspaceHintForThread,
 } from "./workspaces.js";
@@ -16,24 +18,25 @@ export class GithubIssueInboxService {
     string,
     { fetchedAt: number; issues: IssueReference[]; repository: string | null }
   >();
+  private workspaceDiscovery: Promise<Record<string, string>> | null = null;
 
   constructor(
     private readonly store = new CodexionLocalStore(),
     private readonly github = new GithubCli(),
     private readonly starter = new GithubIssueTaskStarter(store),
+    private readonly listWorkspaceRoots: () => Promise<string[]> = knownCodexWorkspaceRoots,
+    private readonly inspectWorkspaces: (
+      roots: readonly string[],
+    ) => Promise<Awaited<ReturnType<typeof discoverGithubWorkspaces>>> = discoverGithubWorkspaces,
   ) {}
 
   async snapshot(includeRepositories = false): Promise<IssueInboxSnapshot> {
-    const [config, state, github, detectedWorkspaces] = await Promise.all([
+    const [config, state, github] = await Promise.all([
       this.store.readConfig(),
       this.store.readState(),
       this.github.status(),
-      discoverGithubWorkspaces(),
     ]);
-    const detected = Object.fromEntries(
-      detectedWorkspaces.map((workspace) => [workspace.repository, workspace.path]),
-    );
-    const workspaces = { ...detected, ...config.issueInbox.repositoryWorkspaces };
+    const workspaces = await this.discoverAndRememberWorkspaces();
     let repositories: GithubRepository[] = [];
     let issues: IssueReference[] = [];
     if (github.authenticated && github.login !== undefined) {
@@ -149,6 +152,13 @@ export class GithubIssueInboxService {
     await this.store.writeConfig(config);
   }
 
+  async rescanWorkspaces(): Promise<void> {
+    const config = await this.store.readConfig();
+    config.issueInbox.inspectedWorkspaceRoots = [];
+    await this.store.writeConfig(config);
+    await this.discoverAndRememberWorkspaces(true);
+  }
+
   async ignore(issueId: string): Promise<void> {
     const issue = this.requireIssue(issueId);
     await this.store.putIssue({
@@ -174,10 +184,9 @@ export class GithubIssueInboxService {
   async handle(issueId: string): Promise<StartedIssueTask> {
     const issue = this.requireIssue(issueId);
     const config = await this.store.readConfig();
-    const detected = await discoverGithubWorkspaces();
+    const detected = await this.discoverAndRememberWorkspaces();
     const workspace =
-      config.issueInbox.repositoryWorkspaces[issue.repository] ??
-      detected.find((item) => item.repository === issue.repository)?.path;
+      config.issueInbox.repositoryWorkspaces[issue.repository] ?? detected[issue.repository];
     if (workspace === undefined) {
       throw new Error(`No local Codex workspace is mapped to ${issue.repository}`);
     }
@@ -191,5 +200,41 @@ export class GithubIssueInboxService {
     const issue = this.latestIssues.get(issueId);
     if (issue === undefined) throw new Error("Issue is no longer in the inbox");
     return issue;
+  }
+
+  private async discoverAndRememberWorkspaces(force = false): Promise<Record<string, string>> {
+    if (force && this.workspaceDiscovery !== null) await this.workspaceDiscovery;
+    if (this.workspaceDiscovery !== null) return this.workspaceDiscovery;
+    this.workspaceDiscovery = this.runWorkspaceDiscovery(force);
+    try {
+      return await this.workspaceDiscovery;
+    } finally {
+      this.workspaceDiscovery = null;
+    }
+  }
+
+  private async runWorkspaceDiscovery(force: boolean): Promise<Record<string, string>> {
+    const config = await this.store.readConfig();
+    const roots = await this.listWorkspaceRoots();
+    const knownPaths = new Set(Object.values(config.issueInbox.repositoryWorkspaces));
+    const inspected = new Set(config.issueInbox.inspectedWorkspaceRoots);
+    const pending = roots.filter(
+      (root) =>
+        !knownPaths.has(root) &&
+        !inspected.has(root) &&
+        (force || !isMacOSProtectedWorkspaceRoot(root)),
+    );
+    if (pending.length === 0) return config.issueInbox.repositoryWorkspaces;
+
+    const discovered = await this.inspectWorkspaces(pending);
+    const latestConfig = await this.store.readConfig();
+    for (const workspace of discovered) {
+      latestConfig.issueInbox.repositoryWorkspaces[workspace.repository] = workspace.path;
+    }
+    latestConfig.issueInbox.inspectedWorkspaceRoots = [
+      ...new Set([...latestConfig.issueInbox.inspectedWorkspaceRoots, ...pending]),
+    ].sort();
+    await this.store.writeConfig(latestConfig);
+    return latestConfig.issueInbox.repositoryWorkspaces;
   }
 }

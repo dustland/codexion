@@ -106,7 +106,16 @@ export async function attachToCodex(
     try {
       for (const action of actions) {
         if (action.type === "load-settings") await updateIssueInbox(true);
+        if (action.type === "open-full-disk-access") {
+          await execFile("/usr/bin/open", [
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+          ]);
+        }
         if (action.type === "refresh") await updateIssueInbox(false);
+        if (action.type === "rescan-workspaces") {
+          await issueInbox.rescanWorkspaces();
+          await updateIssueInbox(true);
+        }
         if (action.type === "restart-codexion") {
           await execFile("/usr/bin/open", ["-b", "ai.lyu.codexion"]);
           return;

@@ -143,6 +143,12 @@ The repository catalog used by Codexion Settings is also prefetched at startup a
 minutes, while selections continue to apply immediately.
 
 Codexion detects known Codex workspaces and matches their `origin` remote to `owner/repository`.
+Each ordinary workspace root is inspected once and remembered locally, so background polling does
+not keep touching the same folder. Protected Desktop, Documents, and Downloads workspaces are never
+inspected by background polling. If a workspace is under one of those or another protected
+location, use **File Access > Open
+System Settings** to grant Codexion optional Full Disk Access, then choose **Rescan**. Codexion does
+not crawl the disk; it only checks workspace roots already recorded by Codex.
 An issue without a matching local workspace remains visible, but Handle reports a clear error and
 does not create a task. Ignore is local and reversible by editing Codexion state.
 

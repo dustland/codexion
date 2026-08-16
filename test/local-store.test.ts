@@ -50,4 +50,60 @@ describe("CodexionLocalStore", () => {
 
     expect(repositoryRequests).toBe(1);
   });
+
+  it("does not repeatedly inspect the same workspace roots", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codexion-store-"));
+    const store = new CodexionLocalStore(directory);
+    const github = new GithubCli(async (arguments_) => {
+      if (arguments_[0] === "--version" || arguments_[0] === "auth") return "";
+      if (arguments_[0] === "api" && arguments_[1] === "user") return "hugh";
+      throw new Error(`Unexpected gh command: ${arguments_.join(" ")}`);
+    });
+    let inspections = 0;
+    const service = new GithubIssueInboxService(
+      store,
+      github,
+      undefined,
+      async () => ["/tmp/workspace"],
+      async () => {
+        inspections += 1;
+        return [];
+      },
+    );
+
+    await service.snapshot();
+    await service.snapshot();
+
+    expect(inspections).toBe(1);
+    expect((await store.readConfig()).issueInbox.inspectedWorkspaceRoots).toEqual([
+      "/tmp/workspace",
+    ]);
+
+    await service.rescanWorkspaces();
+    expect(inspections).toBe(2);
+  });
+
+  it("defers protected workspace inspection until an explicit rescan", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codexion-store-"));
+    const store = new CodexionLocalStore(directory);
+    let inspections = 0;
+    const service = new GithubIssueInboxService(
+      store,
+      new GithubCli(async () => {
+        throw new Error("gh should not be needed");
+      }),
+      undefined,
+      async () => [join(process.env.HOME ?? "/Users/test", "Documents", "workspace")],
+      async () => {
+        inspections += 1;
+        return [];
+      },
+    );
+
+    await service.snapshot();
+    expect(inspections).toBe(0);
+
+    await service.rescanWorkspaces();
+    expect(inspections).toBe(1);
+  });
 });

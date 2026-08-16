@@ -7,6 +7,7 @@ const DATA_DIRECTORY = join(homedir(), "Library", "Application Support", "Codexi
 
 export const DEFAULT_CONFIG: CodexionConfig = {
   issueInbox: {
+    inspectedWorkspaceRoots: [],
     maxAgeDays: 3,
     pollIntervalMinutes: 3,
     repositoryWorkspaces: {},
@@ -30,6 +31,9 @@ export class CodexionLocalStore {
     const inbox = value.issueInbox;
     return {
       issueInbox: {
+        inspectedWorkspaceRoots: Array.isArray(inbox?.inspectedWorkspaceRoots)
+          ? inbox.inspectedWorkspaceRoots.filter((item): item is string => typeof item === "string")
+          : [],
         maxAgeDays:
           inbox?.maxAgeDays === null
             ? null
